@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>系统设置 - SOE 估算设置</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-page: #0F1D38;
+    --bg-bar: #18294D;
+    --bg-card: #243B66;
+    --bg-card-active: #17386B;
+    --line: #2A3F68;
+    --bg-field: #0E0E10;
+    --line-field: #3F3F46;
+    --cyan: #29B6F6;
+    --green: #4CAF50;
+    --txt-1: #FAFAFA;
+    --txt-2: #A1A1AA;
+    --txt-3: #71717A;
+    --font-sans: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+    --font-mono: "JetBrains Mono", "SF Mono", Consolas, monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg-page);
+  }
+
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== 1280 × 800 设计画布，等比缩放 ===== */
+  .stage {
+    width: 1280px;
+    height: 800px;
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-page);
+    overflow: hidden;
+    transform-origin: center center;
+  }
+
+  /* ===== 顶栏 ===== */
+  .topbar {
+    height: 56px;
+    flex: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 24px;
+    background: var(--bg-bar);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-logo {
+    width: 12px; height: 12px;
+    border-radius: 3px;
+    background: var(--cyan);
+  }
+  .brand-name { font-size: 16px; font-weight: 600; color: var(--txt-1); }
+
+  .nav-tabs { display: flex; align-items: center; gap: 4px; }
+  .nav-tab {
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--txt-2);
+    cursor: pointer;
+    transition: color .15s, background-color .15s;
+    user-select: none;
+  }
+  .nav-tab:hover { color: var(--txt-1); }
+  .nav-tab.active { background: var(--bg-card); color: var(--txt-1); }
+
+  .status { display: flex; align-items: center; gap: 8px; }
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+  }
+  .status-text { font-size: 13px; color: var(--txt-2); }
+  .status-time { font-size: 13px; font-family: var(--font-mono); color: var(--txt-3); }
+
+  .divider { height: 1px; flex: none; background: var(--line); }
+
+  /* ===== 内容区 ===== */
+  .content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+    min-height: 0;
+  }
+
+  .setting-tabs { display: flex; gap: 8px; flex: none; }
+  .setting-tab {
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--txt-2);
+    background: var(--bg-card);
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: color .15s, border-color .15s;
+    user-select: none;
+  }
+  .setting-tab.st-med { font-weight: 500; }
+  .setting-tab:hover { color: var(--txt-1); }
+  .setting-tab.active {
+    background: var(--bg-card-active);
+    border-color: var(--cyan);
+    color: var(--cyan);
+  }
+
+  /* ===== 设置面板 ===== */
+  .panel {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 24px;
+    background: var(--bg-bar);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+  }
+  .panel-head { display: flex; flex-direction: column; gap: 4px; }
+  .panel-title { font-size: 18px; font-weight: 600; color: var(--txt-1); }
+  .panel-subtitle { font-size: 13px; color: var(--txt-2); }
+  .panel-divider { height: 1px; flex: none; background: var(--line); }
+
+  .form {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 16px;
+  }
+
+  .field-card {
+    width: calc(50% - 8px);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px;
+    background: var(--bg-card);
+    border-radius: 8px;
+  }
+  .field-card.tall { gap: 12px; }
+  .field-label { font-size: 14px; font-weight: 500; color: var(--txt-1); }
+  .field-hint { font-size: 11px; color: var(--txt-3); }
+
+  .control {
+    height: 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 12px;
+    background: var(--bg-field);
+    border: 1px solid var(--line-field);
+    border-radius: 6px;
+  }
+  .control input {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--txt-1);
+  }
+  .control .control-value { font-size: 14px; color: var(--txt-1); }
+  .control .control-unit { font-size: 12px; color: var(--txt-3); }
+  .control .chevron { flex: none; display: flex; }
+
+  /* 单选组 */
+  .radio-group { display: flex; gap: 24px; padding-top: 2px; }
+  .radio-opt {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .radio-ring {
+    width: 18px; height: 18px;
+    flex: none;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .radio-ring::before {
+    content: '';
+    position: absolute;
+    inset: 1.8px;
+    border-radius: 50%;
+    border: 1px solid #52525B;
+  }
+  .radio-ring::after {
+    content: '';
+    width: 7.2px; height: 7.2px;
+    border-radius: 50%;
+    background: transparent;
+  }
+  .radio-opt.selected .radio-ring::before { border-color: var(--cyan); }
+  .radio-opt.selected .radio-ring::after { background: var(--cyan); }
+  .radio-label { font-size: 13px; color: var(--txt-2); }
+  .radio-opt.selected .radio-label { color: var(--txt-1); }
+
+  /* ===== 底部按钮 ===== */
+  .footer {
+    flex: none;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+  .btn {
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: var(--font-sans);
+    cursor: pointer;
+    transition: filter .15s, background-color .15s;
+  }
+  .btn-reset {
+    padding: 10px 20px;
+    background: transparent;
+    border: 1px solid var(--line-field);
+    color: var(--txt-2);
+  }
+  .btn-reset:hover { color: var(--txt-1); border-color: var(--txt-3); }
+  .btn-save {
+    padding: 10px 24px;
+    background: var(--cyan);
+    border: none;
+    color: var(--bg-field);
+  }
+  .btn-save:hover { filter: brightness(1.1); }
+</style>
+</head>
+<body>
+  <div class="stage" id="stage">
+    <!-- 顶栏 -->
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-logo"></div>
+        <div class="brand-name">储能 · 边缘计算监控系统</div>
+      </div>
+      <nav class="nav-tabs">
+        <div class="nav-tab">实时监控</div>
+        <div class="nav-tab">算法估算</div>
+        <div class="nav-tab active">系统设置</div>
+      </nav>
+      <div class="status">
+        <div class="status-dot"></div>
+        <div class="status-text">在线</div>
+        <div class="status-time">最后更新 14:32:05</div>
+      </div>
+    </header>
+    <div class="divider"></div>
+
+    <!-- 内容区 -->
+    <main class="content">
+      <!-- 设置页签 -->
+      <div class="setting-tabs" id="settingTabs">
+        <div class="setting-tab st-med">SOC 估算设置</div>
+        <div class="setting-tab active">SOE 估算设置</div>
+        <div class="setting-tab">SOP 估算设置</div>
+        <div class="setting-tab">不一致性估算设置</div>
+        <div class="setting-tab">预警估算设置</div>
+      </div>
+
+      <!-- 设置面板 -->
+      <section class="panel">
+        <div class="panel-head">
+          <div class="panel-title">SOE 估算设置</div>
+          <div class="panel-subtitle">配置剩余可用电量估算的采样与参考参数</div>
+        </div>
+        <div class="panel-divider"></div>
+
+        <div class="form">
+          <!-- 时间窗（点数） -->
+          <div class="field-card">
+            <div class="field-label">时间窗（点数）</div>
+            <div class="field-hint">参与 SOE 滑动估算的采样点数量</div>
+            <div class="control">
+              <input id="windowInput" type="text" value="60" spellcheck="false">
+              <span class="control-unit">点</span>
+            </div>
+          </div>
+
+          <!-- 采样频率 -->
+          <div class="field-card">
+            <div class="field-label">采样频率</div>
+            <div class="field-hint">数据采集的时间间隔</div>
+            <div class="control">
+              <span class="control-value">1 秒 / 点</span>
+              <span class="chevron">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <path d="M4.5 6.75 L9 11.25 L13.5 6.75" stroke="#A1A1AA" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+            </div>
+          </div>
+
+          <!-- 估算参考值电压值 -->
+          <div class="field-card tall">
+            <div class="field-label">估算参考值电压值</div>
+            <div class="field-hint">选择单体电压的统计参考方式</div>
+            <div class="radio-group" id="radioGroup">
+              <div class="radio-opt selected" data-value="avg">
+                <span class="radio-ring"></span>
+                <span class="radio-label">平均值</span>
+              </div>
+              <div class="radio-opt" data-value="geometric">
+                <span class="radio-ring"></span>
+                <span class="radio-label">几何平均值</span>
+              </div>
+              <div class="radio-opt" data-value="median">
+                <span class="radio-ring"></span>
+                <span class="radio-label">中位数</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 底部按钮 -->
+        <div class="footer">
+          <button class="btn btn-reset" id="btnReset">重置</button>
+          <button class="btn btn-save" id="btnSave">保存设置</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+<script>
+  // ===== 等比缩放：保留 1280×800 原始画布 =====
+  var DESIGN_W = 1280, DESIGN_H = 800;
+  var stage = document.getElementById('stage');
+  function fitStage() {
+    var scale = Math.min(window.innerWidth / DESIGN_W, window.innerHeight / DESIGN_H);
+    stage.style.transform = 'scale(' + scale + ')';
+  }
+  window.addEventListener('resize', fitStage);
+  fitStage();
+
+  // ===== 单选组交互 =====
+  var radioGroup = document.getElementById('radioGroup');
+  radioGroup.addEventListener('click', function (e) {
+    var opt = e.target.closest('.radio-opt');
+    if (!opt) return;
+    radioGroup.querySelectorAll('.radio-opt').forEach(function (o) {
+      o.classList.remove('selected');
+    });
+    opt.classList.add('selected');
+  });
+
+  // ===== 重置 =====
+  var DEFAULT_VALUE = '60';
+  document.getElementById('btnReset').addEventListener('click', function () {
+    document.getElementById('windowInput').value = DEFAULT_VALUE;
+    radioGroup.querySelectorAll('.radio-opt').forEach(function (o) {
+      o.classList.toggle('selected', o.dataset.value === 'avg');
+    });
+  });
+</script>
+</body>
+</html>

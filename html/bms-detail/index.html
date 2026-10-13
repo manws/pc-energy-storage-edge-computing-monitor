@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BMS1 · 查看详情</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0F1D38;
+    --surface: #18294D;
+    --surface-raised: #243B66;
+    --status-ok-bg: #182C1A;
+    --border: #2A3F68;
+    --grid: #27272A;
+    --text-primary: #FAFAFA;
+    --text-secondary: #A1A1AA;
+    --text-muted: #71717A;
+    --green: #4CAF50;
+    --blue: #29B6F6;
+    --orange: #F59E0B;
+    --cyan: #22D3EE;
+    --red: #FF5252;
+    --font-sans: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body { height: 100%; }
+
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: var(--bg);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  img { display: block; }
+
+  /* ============ 1280×800 原始画布，等比缩放 ============ */
+  .stage {
+    flex: none;
+    width: 1280px;
+    height: 800px;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    overflow: hidden;
+    transform-origin: center center;
+  }
+
+  /* ============ 顶栏 ============ */
+  .top-bar {
+    flex: none;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    background: var(--surface);
+  }
+
+  .tb-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .back {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px 6px 8px;
+    border: none;
+    border-radius: 8px;
+    background: var(--surface-raised);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 18px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: background .15s ease;
+  }
+  .back:hover { background: #2C4675; }
+  .back svg { flex: none; }
+
+  .title {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+    color: var(--text-primary);
+  }
+
+  .tb-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .status {
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: var(--status-ok-bg);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 17px;
+    color: var(--green);
+  }
+
+  .updated {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 17px;
+    color: var(--text-muted);
+  }
+
+  /* ============ 分隔线 ============ */
+  .divider {
+    flex: none;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ============ 内容区 ============ */
+  .content {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+  }
+
+  /* ---- 仪表盘行 ---- */
+  .gauge-row {
+    flex: none;
+    height: 216px;
+    display: flex;
+    gap: 16px;
+  }
+
+  .gauge-card {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+
+  .gauge-label {
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 18px;
+    color: var(--text-secondary);
+  }
+
+  .gauge-visual {
+    width: 160px;
+    height: 96px;
+  }
+
+  .val {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+
+  .val .num {
+    font-family: var(--font-mono);
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 36px;
+    color: var(--text-primary);
+  }
+  .val .num.accent { color: var(--green); }
+
+  .val .unit {
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--text-secondary);
+  }
+
+  .range {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 14px;
+    color: var(--text-muted);
+  }
+
+  /* ---- 曲线图行 ---- */
+  .chart-row {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    gap: 16px;
+  }
+
+  .chart-card {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+
+  .card-head {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .card-title {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 21px;
+    color: var(--text-primary);
+  }
+
+  .legend {
+    display: flex;
+    gap: 14px;
+  }
+
+  .lg {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    line-height: 17px;
+    color: var(--text-secondary);
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 4px;
+  }
+  .dot.orange { background: var(--orange); }
+  .dot.cyan   { background: var(--cyan); }
+  .dot.red    { background: var(--red); }
+  .dot.green  { background: var(--green); }
+
+  .chart {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .chart img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .stats {
+    flex: none;
+    display: flex;
+    gap: 12px;
+  }
+
+  .stat {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 10px;
+    background: var(--surface-raised);
+    border-radius: 8px;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    line-height: 15px;
+    color: var(--text-secondary);
+  }
+
+  .stat-value {
+    font-family: var(--font-mono);
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 24px;
+  }
+  .stat-value.orange { color: var(--orange); }
+  .stat-value.cyan   { color: var(--cyan); }
+  .stat-value.red    { color: var(--red); }
+  .stat-value.green  { color: var(--green); }
+</style>
+</head>
+<body>
+
+<div class="stage" id="stage">
+
+  <!-- 顶栏 -->
+  <header class="top-bar">
+    <div class="tb-left">
+      <button class="back" type="button">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path fill="#A1A1AA" transform="matrix(1 0 0 1 6 4)" d="M-0.7071 4.7071L3.2929 8.7071Q3.5808 9.0121 4 9Q4.4192 9.0121 4.7071 8.7071Q5.0121 8.4192 5 8Q5.0121 7.5808 4.7071 7.2929L1.4142 4L4.7071 0.7071Q5.0121 0.4192 5 0Q5.0121 -0.4192 4.7071 -0.7071Q4.4192 -1.0121 4 -1Q3.5808 -1.0121 3.2929 -0.7071L-0.7071 3.2929Q-1.0121 3.5808 -1 4Q-1.0121 4.4192 -0.7071 4.7071Z"/>
+        </svg>
+        <span>返回</span>
+      </button>
+      <h1 class="title">BMS1 · 查看详情</h1>
+    </div>
+    <div class="tb-right">
+      <span class="status">正常</span>
+      <span class="updated">最后更新 14:32:05</span>
+    </div>
+  </header>
+
+  <div class="divider"></div>
+
+  <!-- 内容区 -->
+  <main class="content">
+
+    <!-- 仪表盘行 -->
+    <section class="gauge-row">
+
+      <article class="gauge-card">
+        <h2 class="gauge-label">总电压</h2>
+        <div class="gauge-visual">
+          <img src="./assets/svg/220_94-20261008_151934196.svg" width="160" height="96" alt="总电压仪表盘">
+        </div>
+        <div class="val">
+          <span class="num">712.5</span>
+          <span class="unit">V</span>
+        </div>
+        <p class="range">量程 600 – 750 V</p>
+      </article>
+
+      <article class="gauge-card">
+        <h2 class="gauge-label">总电流</h2>
+        <div class="gauge-visual">
+          <img src="./assets/svg/220_103-20261008_151934410.svg" width="160" height="96" alt="总电流仪表盘">
+        </div>
+        <div class="val">
+          <span class="num">128.6</span>
+          <span class="unit">A</span>
+        </div>
+        <p class="range">量程 0 – 200 A</p>
+      </article>
+
+      <article class="gauge-card">
+        <h2 class="gauge-label">SOC 荷电状态</h2>
+        <div class="gauge-visual">
+          <img src="./assets/svg/220_112-20261008_151934619.svg" width="160" height="96" alt="SOC 仪表盘">
+        </div>
+        <div class="val">
+          <span class="num accent">86.2</span>
+          <span class="unit">%</span>
+        </div>
+        <p class="range">额定容量 280 Ah</p>
+      </article>
+
+    </section>
+
+    <!-- 曲线图行 -->
+    <section class="chart-row">
+
+      <article class="chart-card">
+        <header class="card-head">
+          <h3 class="card-title">单体极值 · 电压曲线</h3>
+          <div class="legend">
+            <span class="lg"><i class="dot orange"></i>最高单体</span>
+            <span class="lg"><i class="dot cyan"></i>最低单体</span>
+          </div>
+        </header>
+        <div class="chart">
+          <img src="./assets/svg/220_130-20261008_151934818.svg" alt="单体电压曲线图">
+        </div>
+        <div class="stats">
+          <div class="stat">
+            <span class="stat-label">最高单体 (#128)</span>
+            <span class="stat-value orange">3.412 V</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">最低单体 (#291)</span>
+            <span class="stat-value cyan">3.398 V</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="chart-card">
+        <header class="card-head">
+          <h3 class="card-title">温度极值 · 温度曲线</h3>
+          <div class="legend">
+            <span class="lg"><i class="dot red"></i>最高温度</span>
+            <span class="lg"><i class="dot green"></i>最低温度</span>
+          </div>
+        </header>
+        <div class="chart">
+          <img src="./assets/svg/220_155-20261008_151935075.svg" alt="温度曲线图">
+        </div>
+        <div class="stats">
+          <div class="stat">
+            <span class="stat-label">最高温度 (#204)</span>
+            <span class="stat-value red">32.5 ℃</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">最低温度 (#057)</span>
+            <span class="stat-value green">28.1 ℃</span>
+          </div>
+        </div>
+      </article>
+
+    </section>
+
+  </main>
+
+</div>
+
+<script>
+  // 保留 1280×800 原始画布，等比缩放适配窗口
+  (function () {
+    var stage = document.getElementById('stage');
+    function fit() {
+      var scale = Math.min(window.innerWidth / 1280, window.innerHeight / 800);
+      stage.style.transform = 'scale(' + scale + ')';
+    }
+    window.addEventListener('resize', fit);
+    fit();
+  })();
+</script>
+
+</body>
+</html>

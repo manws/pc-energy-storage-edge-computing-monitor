@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>系统设置 · 储能边缘计算监控系统</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Converted from design fills (RGB 0~1 → hex) */
+    --bg: #0F1D38;            /* 页面底色 */
+    --surface: #18294D;       /* 顶栏 / 面板 */
+    --card: #243B66;          /* 未选中页签 / 表单卡片 */
+    --card-active: #17386B;   /* 选中的设置页签 */
+    --accent: #29B6F6;        /* 品牌青色 */
+    --divider: #2A3F68;       /* 分隔线 */
+    --text: #FAFAFA;          /* 主文本 */
+    --text-dim: #A1A1AA;      /* 次级文本 */
+    --text-faint: #71717A;    /* 弱化文本 */
+    --green: #4CAE50;         /* 在线状态 */
+    --input-bg: #0C1A33;      /* 输入框底色 */
+    --border: #3F3F46;        /* 输入框 / 按钮描边 */
+    --on-accent: #0E0E10;     /* 主按钮文字 */
+    --font-sans: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #060B18;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== 原始 1280×800 画布，JS 等比缩放居中 ===== */
+  .stage {
+    position: absolute;
+    width: 1280px;
+    height: 800px;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform-origin: top left;
+  }
+
+  /* ===== 顶栏 ===== */
+  .top-bar {
+    width: 100%;
+    height: 56px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    background: var(--surface);
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .brand .logo {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    background: var(--accent);
+  }
+  .brand .brand-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .tabs {
+    display: flex;
+    gap: 4px;
+  }
+  .tab {
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: color .15s ease;
+    user-select: none;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active {
+    background: var(--card);
+    color: var(--text);
+  }
+  .status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .status .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 4px;
+    background: var(--green);
+  }
+  .status .status-text {
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+  .status .update-time {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-faint);
+  }
+
+  .divider {
+    width: 100%;
+    height: 1px;
+    flex-shrink: 0;
+    background: var(--divider);
+  }
+
+  /* ===== 内容区 ===== */
+  .content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+    min-height: 0;
+  }
+
+  .setting-tabs {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .st {
+    padding: 9px 16px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: var(--card);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: color .15s ease, border-color .15s ease;
+  }
+  .st:hover { color: var(--text); }
+  .st.active {
+    background: var(--card-active);
+    border-color: var(--accent);
+    color: var(--accent);
+    cursor: default;
+  }
+
+  .panel {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 24px;
+    background: var(--surface);
+    border: 1px solid var(--divider);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .panel-title {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .panel-title h1 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .panel-title p {
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+  .panel-divider {
+    width: 100%;
+    height: 1px;
+    flex-shrink: 0;
+    background: var(--divider);
+  }
+
+  .form {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 16px;
+  }
+  .field {
+    width: 580px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px;
+    background: var(--card);
+    border-radius: 8px;
+  }
+  .field.fixed { height: 128px; }
+  .field label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .field .hint {
+    font-size: 11px;
+    color: var(--text-faint);
+  }
+
+  .input {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .input input {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .input .unit {
+    font-size: 12px;
+    color: var(--text-faint);
+  }
+
+  .dropdown {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 40px;
+    padding: 0 10px 0 12px;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .dropdown .value {
+    font-size: 14px;
+    color: var(--text);
+  }
+  .dropdown svg { flex-shrink: 0; }
+
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .toggle {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    border: none;
+    border-radius: 12px;
+    background: var(--border);
+    cursor: pointer;
+    transition: background .2s ease;
+  }
+  .toggle.on { background: var(--accent); }
+  .toggle .knob {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    background: #FFFFFF;
+    transition: left .2s ease;
+  }
+  .toggle.on .knob { left: 23px; }
+  .toggle-label {
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+  .toggle-label.on { color: var(--green); }
+
+  .footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .btn-reset {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: color .15s ease, border-color .15s ease;
+  }
+  .btn-reset:hover {
+    color: var(--text);
+    border-color: var(--text-dim);
+  }
+  .btn-save {
+    padding: 10px 24px;
+    border-radius: 8px;
+    border: none;
+    background: var(--accent);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--on-accent);
+    cursor: pointer;
+    transition: filter .15s ease;
+  }
+  .btn-save:hover { filter: brightness(1.1); }
+</style>
+</head>
+<body>
+  <div class="stage" id="stage">
+    <!-- 顶栏 -->
+    <header class="top-bar">
+      <div class="brand">
+        <span class="logo"></span>
+        <span class="brand-name">储能 · 边缘计算监控系统</span>
+      </div>
+      <nav class="tabs" id="navTabs">
+        <div class="tab">实时监控</div>
+        <div class="tab">算法估算</div>
+        <div class="tab active">系统设置</div>
+      </nav>
+      <div class="status">
+        <span class="dot"></span>
+        <span class="status-text">在线</span>
+        <span class="update-time">最后更新 14:32:05</span>
+      </div>
+    </header>
+
+    <div class="divider"></div>
+
+    <!-- 内容区 -->
+    <main class="content">
+      <div class="setting-tabs" id="settingTabs">
+        <button class="st active">SOC 估算设置</button>
+        <button class="st">SOE 估算设置</button>
+        <button class="st">SOP 估算设置</button>
+        <button class="st">不一致性估算设置</button>
+        <button class="st">预警估算设置</button>
+      </div>
+
+      <section class="panel">
+        <div class="panel-title">
+          <h1>SOC 估算设置</h1>
+          <p>配置荷电状态估算的采样与参考参数</p>
+        </div>
+        <div class="panel-divider"></div>
+
+        <div class="form">
+          <div class="field fixed">
+            <label>时间窗（点数）</label>
+            <span class="hint">参与 SOC 滑动估算的采样点数量</span>
+            <div class="input">
+              <input type="text" value="60" aria-label="时间窗（点数）">
+              <span class="unit">点</span>
+            </div>
+          </div>
+
+          <div class="field fixed">
+            <label>采样频率</label>
+            <span class="hint">数据采集的时间间隔</span>
+            <div class="dropdown" id="freqDropdown">
+              <span class="value">1 秒 / 点</span>
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4.5 6.75L9 11.25L13.5 6.75" stroke="#A1A1AA" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>是否参考当前 SOC</label>
+            <span class="hint">开启后以当前 SOC 作为估算初值进行校正</span>
+            <div class="toggle-row">
+              <button class="toggle on" id="socToggle" aria-label="是否参考当前 SOC"><span class="knob"></span></button>
+              <span class="toggle-label on" id="socToggleLabel">是（已开启）</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer">
+          <button class="btn-reset">重置</button>
+          <button class="btn-save">保存设置</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+<script>
+  // ===== 原始画布等比缩放居中 =====
+  (function () {
+    var stage = document.getElementById('stage');
+    function fit() {
+      var s = Math.min(window.innerWidth / 1280, window.innerHeight / 800);
+      stage.style.transform = 'scale(' + s + ')';
+      stage.style.left = (window.innerWidth - 1280 * s) / 2 + 'px';
+      stage.style.top = (window.innerHeight - 800 * s) / 2 + 'px';
+    }
+    window.addEventListener('resize', fit);
+    fit();
+  })();
+
+  // ===== 顶栏页签切换（视觉态）=====
+  (function () {
+    var tabs = document.querySelectorAll('#navTabs .tab');
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        tabs.forEach(function (t) { t.classList.remove('active'); });
+        tab.classList.add('active');
+      });
+    });
+  })();
+
+  // ===== 设置页签切换（视觉态）=====
+  (function () {
+    var tabs = document.querySelectorAll('#settingTabs .st');
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        tabs.forEach(function (t) { t.classList.remove('active'); });
+        tab.classList.add('active');
+      });
+    });
+  })();
+
+  // ===== SOC 参考开关 =====
+  (function () {
+    var toggle = document.getElementById('socToggle');
+    var label = document.getElementById('socToggleLabel');
+    toggle.addEventListener('click', function () {
+      var on = toggle.classList.toggle('on');
+      label.classList.toggle('on', on);
+      label.textContent = on ? '是（已开启）' : '否（已关闭）';
+    });
+  })();
+</script>
+</body>
+</html>
