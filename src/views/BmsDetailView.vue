@@ -4,7 +4,7 @@
       <!-- 顶栏 -->
       <header class="top-bar">
         <div class="tb-left">
-          <button class="back" type="button" @click="go('/')">
+          <button class="back" type="button" @click="go('/cluster/' + detail.clusterId)">
             <svg
               width="16"
               height="16"
@@ -20,7 +20,7 @@
             </svg>
             <span>返回</span>
           </button>
-          <h1 class="title">{{ clusterName }} · 查看详情</h1>
+          <h1 class="title">{{ clusterName }} · {{ packName }} · 查看详情</h1>
         </div>
         <div class="tb-right">
           <span class="status" :class="statusTone">{{ detail.status }}</span>
@@ -124,11 +124,15 @@
             </div>
             <div class="stats">
               <div class="stat">
-                <span class="stat-label">最高温度 (#{{ cellNo(detail.cellTemperature.maxIndex) }})</span>
+                <span class="stat-label"
+                  >最高温度 (#{{ cellNo(detail.cellTemperature.maxIndex) }})</span
+                >
                 <span class="stat-value red">{{ detail.cellTemperature.max.toFixed(1) }} ℃</span>
               </div>
               <div class="stat">
-                <span class="stat-label">最低温度 (#{{ cellNo(detail.cellTemperature.minIndex) }})</span>
+                <span class="stat-label"
+                  >最低温度 (#{{ cellNo(detail.cellTemperature.minIndex) }})</span
+                >
                 <span class="stat-value green">{{ detail.cellTemperature.min.toFixed(1) }} ℃</span>
               </div>
             </div>
@@ -145,13 +149,16 @@ import { useRoute, useRouter } from 'vue-router'
 import StageFrame from '@/components/StageFrame.vue'
 import GaugeChart from '@/components/charts/GaugeChart.vue'
 import TrendChart from '@/components/charts/TrendChart.vue'
-import { getClusterDetail } from '@/mock/cluster'
+import { getPackDetail } from '@/mock/cluster'
 
 const route = useRoute()
 const router = useRouter()
-const detail = computed(() => getClusterDetail(route.params.id))
+const detail = computed(() => getPackDetail(route.params.clusterId, route.params.packId))
 const clusterName = computed(() => `${detail.value.clusterId}簇`)
-const statusTone = computed(() => ({ 正常: 'ok', 预警: 'warn', 异常: 'error' }[detail.value.status] || 'ok'))
+const packName = computed(() => `PACK${detail.value.packId}`)
+const statusTone = computed(
+  () => ({ 正常: 'ok', 预警: 'warn', 异常: 'error' })[detail.value.status] || 'ok'
+)
 const voltageSeries = computed(() => [
   { name: '最高单体', color: '#f59e0b', data: detail.value.cellVoltage.maxSeries },
   { name: '最低单体', color: '#22d3ee', data: detail.value.cellVoltage.minSeries }

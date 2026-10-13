@@ -1,17 +1,10 @@
 <template>
   <StageFrame>
     <div id="stage" class="page stage">
-      <!-- 顶栏 -->
       <header class="top-bar">
         <div class="tb-left">
-          <button class="back" type="button" @click="go('/')">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
+          <button class="back" type="button" @click="go('/cluster/' + estimate.clusterId)">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path
                 fill="#A1A1AA"
                 transform="matrix(1 0 0 1 6 4)"
@@ -20,7 +13,7 @@
             </svg>
             <span>返回</span>
           </button>
-          <h1 class="page-title">{{ clusterName }} · 算法估算</h1>
+          <h1 class="page-title">{{ clusterName }} · {{ packName }} · 算法估算</h1>
         </div>
         <div class="status">
           <div class="status-dot"></div>
@@ -31,90 +24,150 @@
 
       <div class="divider"></div>
 
-      <!-- 内容区 -->
       <main class="content">
-        <!-- 参数行 -->
         <section class="param-row">
           <div class="param-card">
             <div class="param-label">SOE · 能量估算</div>
-            <div class="param-value">
-              <span class="param-num num-blue">{{ estimate.soe.toFixed(1) }}</span>
-              <span class="param-unit">kWh</span>
+            <div class="dual">
+              <div class="pair">
+                <span class="pair-k">真实值</span>
+                <span class="pair-v num-blue">{{ estimate.soe.actual.toFixed(1) }}</span>
+                <span class="param-unit">kWh</span>
+              </div>
+              <span class="pair-split"></span>
+              <div class="pair">
+                <span class="pair-k">预测值</span>
+                <span class="pair-v num-blue">{{ estimate.soe.predict.toFixed(1) }}</span>
+                <span class="param-unit">kWh</span>
+              </div>
             </div>
           </div>
           <div class="param-card">
             <div class="param-label">SOP · 放电功率</div>
-            <div class="param-value">
-              <span class="param-num num-amber">{{ estimate.sopDischarge.toFixed(1) }}</span>
-              <span class="param-unit">kW</span>
+            <div class="dual">
+              <div class="pair">
+                <span class="pair-k">真实值</span>
+                <span class="pair-v num-amber">{{ estimate.sopDischarge.actual.toFixed(1) }}</span>
+                <span class="param-unit">kW</span>
+              </div>
+              <span class="pair-split"></span>
+              <div class="pair">
+                <span class="pair-k">预测值</span>
+                <span class="pair-v num-amber">{{ estimate.sopDischarge.predict.toFixed(1) }}</span>
+                <span class="param-unit">kW</span>
+              </div>
             </div>
           </div>
           <div class="param-card">
             <div class="param-label">SOP · 充电功率</div>
-            <div class="param-value">
-              <span class="param-num num-green">{{ estimate.sopCharge.toFixed(1) }}</span>
-              <span class="param-unit">kW</span>
+            <div class="dual">
+              <div class="pair">
+                <span class="pair-k">真实值</span>
+                <span class="pair-v num-green">{{ estimate.sopCharge.actual.toFixed(1) }}</span>
+                <span class="param-unit">kW</span>
+              </div>
+              <span class="pair-split"></span>
+              <div class="pair">
+                <span class="pair-k">预测值</span>
+                <span class="pair-v num-green">{{ estimate.sopCharge.predict.toFixed(1) }}</span>
+                <span class="param-unit">kW</span>
+              </div>
             </div>
           </div>
         </section>
 
-        <!-- 主体 -->
-        <section class="body">
-          <!-- 左列 -->
-          <div class="col-left">
-            <!-- SOC 估算卡片 -->
-            <div class="card card-soc">
-              <div class="card-head">
-                <div class="card-title">SOC 估算</div>
-                <div class="card-note">绿 正常 · 黄 偏低 · 红 异常（单位 %）</div>
-              </div>
-              <div class="chart">
-                <SocBarChart :values="socValues" />
-              </div>
-            </div>
-
-            <!-- 预警估算卡片 -->
-            <div class="card card-warn">
-              <div class="card-title">预警估算</div>
-              <div class="table">
-                <div class="thead">
-                  <span class="col-idx">序号</span>
-                  <span class="col-name">故障名称</span>
-                  <span class="col-time">故障时间</span>
-                </div>
-                <div v-for="(item, index) in estimate.warnings" :key="item.name" class="trow">
-                  <span class="idx col-idx">{{ String(index + 1).padStart(2, '0') }}</span>
-                  <span class="name col-name" :class="'name-' + item.level">{{ item.name }}</span>
-                  <span class="time col-time">{{ item.time }}</span>
-                </div>
-              </div>
-            </div>
+        <section class="card card-soc">
+          <div class="card-head">
+            <div class="card-title">SOC 估算 · 52 单体</div>
+            <div class="card-note">单体序号 = SOC</div>
           </div>
-
-          <!-- 右列 -->
-          <div class="col-right">
-            <!-- 单体不一致性卡片 -->
-            <div class="card card-incons">
-              <div class="card-head">
-                <div class="card-title">不一致性（单体）· 416 单体</div>
-                <div class="card-note warn-note">异常 {{ voltageAbnormalCount }} · 绿 正常 / 黄 异常</div>
-              </div>
-              <div class="chart">
-                <CellGridChart :flags="voltageFlags" />
-              </div>
-            </div>
-
-            <!-- 温度不一致性卡片 -->
-            <div class="card card-incons">
-              <div class="card-head">
-                <div class="card-title">不一致性（温度）· 416 单体</div>
-                <div class="card-note warn-note">异常 {{ temperatureAbnormalCount }} · 绿 正常 / 黄 异常</div>
-              </div>
-              <div class="chart">
-                <CellGridChart :flags="temperatureFlags" />
-              </div>
-            </div>
+          <div class="soc-grid">
+            <span v-for="cell in estimate.cells" :key="cell.index" class="soc-lab">
+              单体{{ String(cell.index).padStart(2, '0') }}={{ Number(cell.soc).toFixed(1) }}%
+            </span>
           </div>
+        </section>
+
+        <section class="chart-row">
+          <article class="card card-chart">
+            <header class="card-head">
+              <div class="head-copy">
+                <div class="card-title">OCV-预测曲线</div>
+                <div class="card-note">横轴 容量 Q · 纵轴 电压 V</div>
+              </div>
+              <div class="head-side">
+                <div class="legend">
+                  <span class="lg"><i class="dot blue"></i>真实值</span>
+                  <span class="lg"><i class="dot amber"></i>预测值</span>
+                </div>
+                <span class="metric">评价指标 = {{ estimate.ocv.score.toFixed(2) }}%</span>
+              </div>
+            </header>
+            <div class="chart">
+              <TrendChart :categories="estimate.ocv.categories" :series="ocvSeries" />
+            </div>
+          </article>
+
+          <article class="card card-chart">
+            <header class="card-head">
+              <div class="head-copy">
+                <div class="card-title">容量轨迹预测</div>
+                <div class="card-note">横轴 未来循环次数 · 纵轴 容量 (Ah)</div>
+              </div>
+              <div class="head-side">
+                <div class="legend">
+                  <span class="lg"><i class="dot blue"></i>真实值</span>
+                  <span class="lg"><i class="dot amber"></i>预测值</span>
+                </div>
+                <span class="metric">MAPE = {{ estimate.capacity.mape.toFixed(2) }}%</span>
+              </div>
+            </header>
+            <div class="chart">
+              <TrendChart :categories="estimate.capacity.categories" :series="capacitySeries" />
+            </div>
+          </article>
+        </section>
+
+        <section class="bottom-row">
+          <article class="card card-incons">
+            <div class="card-head">
+              <div class="card-title">不一致性（单体）· 52 单体</div>
+              <div class="card-note warn-note">
+                异常 {{ voltageAbnormalCount }} · 绿正常 / 黄异常
+              </div>
+            </div>
+            <div class="chart">
+              <CellGridChart :flags="voltageFlags" :cols="13" />
+            </div>
+          </article>
+
+          <article class="card card-incons">
+            <div class="card-head">
+              <div class="card-title">不一致性（温度）· 52 单体</div>
+              <div class="card-note warn-note">
+                异常 {{ temperatureAbnormalCount }} · 绿正常 / 黄异常
+              </div>
+            </div>
+            <div class="chart">
+              <CellGridChart :flags="temperatureFlags" :cols="13" />
+            </div>
+          </article>
+
+          <article class="card card-warn">
+            <div class="card-title">预警估算</div>
+            <div class="table">
+              <div class="thead">
+                <span class="col-idx">序号</span>
+                <span class="col-name">故障名称</span>
+                <span class="col-time">故障时间</span>
+              </div>
+              <div v-for="(item, index) in estimate.warnings" :key="item.name" class="trow">
+                <span class="idx col-idx">{{ String(index + 1).padStart(2, '0') }}</span>
+                <span class="name col-name" :class="'name-' + item.level">{{ item.name }}</span>
+                <span class="time col-time">{{ item.time }}</span>
+              </div>
+            </div>
+          </article>
         </section>
       </main>
     </div>
@@ -125,19 +178,29 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import StageFrame from '@/components/StageFrame.vue'
-import SocBarChart from '@/components/charts/SocBarChart.vue'
+import TrendChart from '@/components/charts/TrendChart.vue'
 import CellGridChart from '@/components/charts/CellGridChart.vue'
-import { getClusterEstimate } from '@/mock/cluster'
+import { getPackEstimate } from '@/mock/cluster'
 
 const route = useRoute()
 const router = useRouter()
-const estimate = computed(() => getClusterEstimate(route.params.id))
+const estimate = computed(() => getPackEstimate(route.params.clusterId, route.params.packId))
 const clusterName = computed(() => `${estimate.value.clusterId}簇`)
-const socValues = computed(() => estimate.value.cells.map((cell) => cell.soc))
+const packName = computed(() => `PACK${estimate.value.packId}`)
 const voltageFlags = computed(() => estimate.value.cells.map((cell) => cell.voltageAbnormal))
-const temperatureFlags = computed(() => estimate.value.cells.map((cell) => cell.temperatureAbnormal))
+const temperatureFlags = computed(() =>
+  estimate.value.cells.map((cell) => cell.temperatureAbnormal)
+)
 const voltageAbnormalCount = computed(() => voltageFlags.value.filter(Boolean).length)
 const temperatureAbnormalCount = computed(() => temperatureFlags.value.filter(Boolean).length)
+const ocvSeries = computed(() => [
+  { name: '真实值', color: '#29b6f6', data: estimate.value.ocv.actual },
+  { name: '预测值', color: '#f59e0b', data: estimate.value.ocv.predict }
+])
+const capacitySeries = computed(() => [
+  { name: '真实值', color: '#29b6f6', data: estimate.value.capacity.actual },
+  { name: '预测值', color: '#f59e0b', data: estimate.value.capacity.predict }
+])
 
 function go(path) {
   if (router.currentRoute.value.path !== path) {
@@ -162,6 +225,8 @@ function go(path) {
   --yellow: #f2c94c;
   --font-sans: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
   --font-mono: 'JetBrains Mono', 'SF Mono', 'Consolas', monospace;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
 }
 
 * {
@@ -170,7 +235,6 @@ function go(path) {
   box-sizing: border-box;
 }
 
-/* ===== 1280×800 原始画布 + 等比缩放 ===== */
 .stage {
   width: 1280px;
   height: 800px;
@@ -179,7 +243,6 @@ function go(path) {
   flex-direction: column;
 }
 
-/* ===== 顶栏 ===== */
 .top-bar {
   height: 56px;
   flex-shrink: 0;
@@ -223,52 +286,6 @@ function go(path) {
   color: var(--text);
 }
 
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.brand-logo {
-  width: 12px;
-  height: 12px;
-  border-radius: 3px;
-  background: var(--blue);
-}
-
-.brand-name {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text);
-}
-
-.tabs {
-  display: flex;
-  gap: 4px;
-}
-
-.tab {
-  padding: 7px 14px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--muted);
-  cursor: pointer;
-  user-select: none;
-  transition:
-    color 0.15s,
-    background-color 0.15s;
-}
-
-.tab:hover {
-  color: var(--text);
-}
-
-.tab.active {
-  background: var(--card-2);
-  color: var(--text);
-}
-
 .status {
   display: flex;
   align-items: center;
@@ -299,22 +316,20 @@ function go(path) {
   background: var(--border);
 }
 
-/* ===== 内容区 ===== */
 .content {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 20px;
+  gap: 12px;
+  padding: 14px 20px 16px;
 }
 
-/* 参数行 */
 .param-row {
-  height: 88px;
+  height: 72px;
   flex-shrink: 0;
   display: flex;
-  gap: 16px;
+  gap: 12px;
 }
 
 .param-card {
@@ -322,7 +337,7 @@ function go(path) {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 16px;
+  padding: 10px 16px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -334,21 +349,39 @@ function go(path) {
   color: var(--muted);
 }
 
-.param-value {
+.dual {
   display: flex;
-  align-items: baseline;
-  gap: 4px;
+  align-items: center;
+  gap: 12px;
 }
 
-.param-num {
+.pair {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+
+.pair-k {
+  font-size: 12px;
+  color: var(--dim);
+}
+
+.pair-v {
   font-family: var(--font-mono);
-  font-size: 26px;
+  font-size: 22px;
   font-weight: 700;
-  line-height: 1.1;
+  line-height: 1;
+}
+
+.pair-split {
+  width: 1px;
+  height: 18px;
+  background: var(--border);
 }
 
 .param-unit {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--muted);
 }
 
@@ -362,50 +395,41 @@ function go(path) {
   color: var(--green);
 }
 
-/* 主体两栏 */
-.body {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  gap: 16px;
-}
-
-.col-left {
-  width: 728px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.col-right {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-/* 卡片通用 */
 .card {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 16px;
+  padding: 12px 14px;
   display: flex;
   flex-direction: column;
   min-height: 0;
+  gap: 8px;
 }
 
 .card-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.head-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.head-side {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   flex-shrink: 0;
 }
 
 .card-title {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--text);
 }
@@ -414,8 +438,84 @@ function go(path) {
   font-size: 11px;
   color: var(--dim);
 }
+
 .card-note.warn-note {
   color: var(--yellow);
+}
+
+.card-soc {
+  height: 156px;
+  flex-shrink: 0;
+}
+
+.soc-grid {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 4px 6px;
+  overflow: hidden;
+}
+
+.soc-lab {
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: var(--card-2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 20px;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.chart-row {
+  height: 188px;
+  flex-shrink: 0;
+  display: flex;
+  gap: 12px;
+}
+
+.card-chart {
+  flex: 1;
+  min-width: 0;
+}
+
+.legend {
+  display: flex;
+  gap: 10px;
+}
+
+.lg {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+}
+
+.dot.blue {
+  background: var(--blue);
+}
+.dot.amber {
+  background: var(--amber);
+}
+
+.metric {
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(41, 182, 246, 0.12);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--blue);
+  white-space: nowrap;
 }
 
 .chart {
@@ -426,17 +526,17 @@ function go(path) {
   overflow: hidden;
 }
 
-/* SOC 卡片 */
-.card-soc {
-  height: 224px;
-  flex-shrink: 0;
+.bottom-row {
+  flex: 1;
+  min-height: 0;
+  display: flex;
   gap: 12px;
 }
 
-/* 预警卡片 */
+.card-incons,
 .card-warn {
   flex: 1;
-  gap: 10px;
+  min-width: 0;
 }
 
 .table {
@@ -446,31 +546,34 @@ function go(path) {
   flex-direction: column;
 }
 
-.thead {
+.thead,
+.trow {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: 6px;
+}
+
+.thead {
   background: var(--card-2);
   border-radius: 6px;
-  padding: 9px 10px;
+  padding: 6px 8px;
   flex-shrink: 0;
 }
 
 .thead span {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   color: var(--muted);
 }
 
 .trow {
   flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 10px;
+  padding: 0 8px;
+  min-height: 0;
 }
 
 .col-idx {
-  width: 48px;
+  width: 32px;
   flex-shrink: 0;
 }
 .col-name {
@@ -478,19 +581,24 @@ function go(path) {
   min-width: 0;
 }
 .col-time {
-  width: 150px;
+  width: 92px;
   flex-shrink: 0;
+  text-align: right;
 }
 
 .idx {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 12px;
   color: var(--dim);
 }
 
 .name {
-  font-size: 13px;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+
 .name-critical {
   color: var(--red);
 }
@@ -503,25 +611,7 @@ function go(path) {
 
 .time {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 11px;
   color: var(--muted);
-}
-
-/* 不一致性卡片 */
-.card-incons {
-  flex: 1;
-  gap: 10px;
-}
-
-.page {
-  font-family: var(--font-sans, 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif);
-  -webkit-font-smoothing: antialiased;
-}
-.tab,
-.nav-tab,
-.top-tab,
-.setting-tab,
-.st {
-  cursor: pointer;
 }
 </style>

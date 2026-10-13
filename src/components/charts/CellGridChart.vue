@@ -6,15 +6,15 @@
 import { computed } from 'vue'
 import { useEChart } from './useEChart'
 
-const COLS = 26
-
 const props = defineProps({
   flags: { type: Array, required: true },
-  abnormalColor: { type: String, default: '#f2c94c' }
+  abnormalColor: { type: String, default: '#f2c94c' },
+  cols: { type: Number, default: 26 }
 })
 
 const option = computed(() => {
-  const rows = Math.ceil(props.flags.length / COLS)
+  const cols = props.cols
+  const rows = Math.ceil(props.flags.length / cols)
   return {
     animationDuration: 300,
     grid: { left: 0, right: 0, top: 0, bottom: 0 },
@@ -24,14 +24,14 @@ const option = computed(() => {
       textStyle: { color: '#fafafa', fontSize: 12 },
       formatter(params) {
         const [col, row, flag] = params.data
-        const index = row * COLS + col + 1
+        const index = row * cols + col + 1
         return `单体 #${index}<br/>${flag ? '异常' : '正常'}`
       }
     },
     xAxis: {
       type: 'category',
       show: false,
-      data: Array.from({ length: COLS }, (_, index) => index)
+      data: Array.from({ length: cols }, (_, index) => index)
     },
     yAxis: {
       type: 'category',
@@ -50,7 +50,11 @@ const option = computed(() => {
     series: [
       {
         type: 'heatmap',
-        data: props.flags.map((flag, index) => [index % COLS, Math.floor(index / COLS), flag ? 1 : 0]),
+        data: props.flags.map((flag, index) => [
+          index % cols,
+          Math.floor(index / cols),
+          flag ? 1 : 0
+        ]),
         itemStyle: { borderColor: '#0f1d38', borderWidth: 2 },
         emphasis: { disabled: true }
       }

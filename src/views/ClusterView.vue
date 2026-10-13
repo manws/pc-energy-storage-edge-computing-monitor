@@ -1,0 +1,435 @@
+<template>
+  <StageFrame>
+    <div id="stage" class="page">
+      <section id="screen" class="screen">
+        <header class="top-bar">
+          <div class="tb-left">
+            <button class="back" type="button" @click="go('/')">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path
+                  fill="#A1A1AA"
+                  transform="matrix(1 0 0 1 6 4)"
+                  d="M-0.7071 4.7071L3.2929 8.7071Q3.5808 9.0121 4 9Q4.4192 9.0121 4.7071 8.7071Q5.0121 8.4192 5 8Q5.0121 7.5808 4.7071 7.2929L1.4142 4L4.7071 0.7071Q5.0121 0.4192 5 0Q5.0121 -0.4192 4.7071 -0.7071Q4.4192 -1.0121 4 -1Q3.5808 -1.0121 3.2929 -0.7071L-0.7071 3.2929Q-1.0121 3.5808 -1 4Q-1.0121 4.4192 -0.7071 4.7071Z"
+                />
+              </svg>
+              <span>返回</span>
+            </button>
+            <h1 class="title">{{ clusterName }}</h1>
+          </div>
+          <div class="tb-right">
+            <span class="cluster-status" :class="toneOf(clusterStatus)">{{ clusterStatus }}</span>
+            <span class="updated">最后更新 14:32:05</span>
+          </div>
+        </header>
+        <div class="header-divider"></div>
+
+        <main class="content">
+          <div class="section-header">
+            <div class="sub">8 个 PACK 运行状态</div>
+            <div class="legend">
+              <div class="legend-item"><span class="d ok"></span><span class="t">正常</span></div>
+              <div class="legend-item"><span class="d warn"></span><span class="t">预警</span></div>
+              <div class="legend-item">
+                <span class="d error"></span><span class="t">异常</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="pack-grid">
+            <article v-for="item in packs" :key="item.id" class="pack-card">
+              <div class="card-header">
+                <span class="title">{{ item.title }}</span>
+                <span class="status-pill" :class="toneOf(item.status)">{{ item.status }}</span>
+              </div>
+              <div class="card-divider"></div>
+              <div class="field-grid">
+                <div class="field">
+                  <span class="l">总电压</span><span class="v">{{ item.totalV }}</span>
+                </div>
+                <div class="field">
+                  <span class="l">总电流</span><span class="v">{{ item.totalI }}</span>
+                </div>
+                <div class="field">
+                  <span class="l">SOC</span>
+                  <span class="v" :class="toneOf(item.status)">{{ item.soc }}</span>
+                </div>
+                <div class="field">
+                  <span class="l">最高单体</span><span class="v">{{ item.cellMax }}</span>
+                </div>
+                <div class="field">
+                  <span class="l">最低单体</span><span class="v">{{ item.cellMin }}</span>
+                </div>
+                <div class="field">
+                  <span class="l">最高温度</span><span class="v">{{ item.tempMax }}</span>
+                </div>
+                <div class="field">
+                  <span class="l">最低温度</span><span class="v">{{ item.tempMin }}</span>
+                </div>
+              </div>
+              <div class="card-actions">
+                <button class="detail-btn" type="button" @click="go(packPath(item.id))">
+                  查看详情
+                </button>
+                <button
+                  class="detail-btn"
+                  type="button"
+                  @click="go(packPath(item.id) + '/algorithm')"
+                >
+                  算法估算
+                </button>
+              </div>
+            </article>
+          </div>
+        </main>
+      </section>
+    </div>
+  </StageFrame>
+</template>
+
+<script setup>
+import { computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import StageFrame from '@/components/StageFrame.vue'
+import { getPacks } from '@/mock/cluster'
+
+const route = useRoute()
+const router = useRouter()
+const clusterId = computed(() => String(route.params.id || '1'))
+const clusterName = computed(() => `${clusterId.value}簇`)
+const packs = computed(() => getPacks(clusterId.value))
+const clusterStatus = computed(() => {
+  if (packs.value.some((pack) => pack.status === '异常')) return '异常'
+  if (packs.value.some((pack) => pack.status === '预警')) return '预警'
+  return '正常'
+})
+
+function packPath(packId) {
+  return `/cluster/${clusterId.value}/pack/${packId}`
+}
+
+function go(path) {
+  if (router.currentRoute.value.path !== path) {
+    router.push(path)
+  }
+}
+
+const tones = { 正常: 'ok', 预警: 'warn', 异常: 'error' }
+
+function toneOf(status) {
+  return tones[status] || 'ok'
+}
+</script>
+
+<style scoped>
+.page {
+  --bg-page: #0f1d38;
+  --bg-surface: #18294d;
+  --bg-elevated: #243b66;
+  --border-line: #2a3f68;
+  --border-btn: #3c5486;
+  --divider-card: #27272a;
+  --text-primary: #fafafa;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  --accent: #29b6f6;
+  --ok: #4caf50;
+  --warn: #f2c94c;
+  --error: #ff5252;
+  --pill-ok: #182c1a;
+  --pill-warn: #2e2a16;
+  --pill-error: #2e1818;
+  --r-logo: 3px;
+  --r-dot: 4px;
+  --r-pill: 6px;
+  --r-tab: 8px;
+  --r-btn: 8px;
+  --r-card: 12px;
+  --font-sans: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+#stage {
+  width: 1280px;
+  height: 800px;
+}
+
+.screen {
+  width: 1280px;
+  height: 800px;
+  background: var(--bg-page);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.top-bar {
+  flex: none;
+  height: 56px;
+  padding: 0 24px;
+  background: var(--bg-surface);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tb-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  color: var(--text-primary);
+}
+
+.tb-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cluster-status {
+  padding: 3px 8px;
+  border-radius: var(--r-pill);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 17px;
+}
+
+.cluster-status.ok {
+  background: var(--pill-ok);
+  color: var(--ok);
+}
+.cluster-status.warn {
+  background: var(--pill-warn);
+  color: var(--warn);
+}
+.cluster-status.error {
+  background: var(--pill-error);
+  color: var(--error);
+}
+
+.updated {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 17px;
+  color: var(--text-muted);
+}
+
+.header-divider {
+  flex: none;
+  height: 1px;
+  background: var(--border-line);
+}
+
+.content {
+  flex: 1;
+  min-height: 0;
+  padding: 16px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow: hidden;
+}
+
+.section-header {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.back {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px 6px 8px;
+  border: none;
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 18px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.back:hover {
+  background: #2c4675;
+}
+
+.back svg {
+  flex: none;
+}
+
+.sub {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-item .d {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--r-dot);
+}
+
+.legend-item .d.ok {
+  background: var(--ok);
+}
+.legend-item .d.warn {
+  background: var(--warn);
+}
+.legend-item .d.error {
+  background: var(--error);
+}
+
+.legend-item .t {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.pack-grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: 1fr 1fr;
+  gap: 12px;
+}
+
+.pack-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-line);
+  border-radius: var(--r-card);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-header .title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.status-pill {
+  padding: 3px 8px;
+  border-radius: var(--r-pill);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.status-pill.ok {
+  background: var(--pill-ok);
+  color: var(--ok);
+}
+.status-pill.warn {
+  background: var(--pill-warn);
+  color: var(--warn);
+}
+.status-pill.error {
+  background: var(--pill-error);
+  color: var(--error);
+}
+
+.card-divider {
+  height: 1px;
+  background: var(--divider-card);
+}
+
+.field-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-content: start;
+  gap: 6px 10px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.field .l {
+  font-size: 10px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.field .v {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.field .v.ok {
+  color: var(--ok);
+}
+.field .v.warn {
+  color: var(--warn);
+}
+.field .v.error {
+  color: var(--error);
+}
+
+.card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.detail-btn {
+  flex: 1;
+  min-width: 0;
+  height: 30px;
+  padding: 0 4px;
+  border: 1px solid var(--border-btn);
+  border-radius: var(--r-btn);
+  background: var(--bg-elevated);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.detail-btn:hover {
+  background: #2a4474;
+  border-color: #4a639a;
+}
+</style>

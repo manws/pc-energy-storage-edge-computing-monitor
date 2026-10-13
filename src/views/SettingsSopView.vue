@@ -70,9 +70,9 @@
               <SelectField v-model="sampleFrequency" />
             </div>
 
-            <!-- 估算参考值电压值 -->
+            <!-- 估算参考电压值 -->
             <div class="field-card tall">
-              <div class="field-label">估算参考值电压值</div>
+              <div class="field-label">估算参考电压值</div>
               <div class="field-hint">选择单体电压的统计参考方式</div>
               <div id="radioGroup" class="radio-group">
                 <div
