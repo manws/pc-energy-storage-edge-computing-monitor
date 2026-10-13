@@ -29,36 +29,41 @@
 
           <div class="pack-grid">
             <article v-for="item in packs" :key="item.id" class="pack-card">
-              <div class="card-header">
-                <span class="title">{{ item.title }}</span>
+              <span class="watermark" aria-hidden="true">{{ item.id }}</span>
+              <div class="card-head">
+                <span class="pack-name">{{ item.title }}</span>
               </div>
-              <div class="card-divider"></div>
-              <div class="field-grid">
-                <div class="field">
-                  <span class="l">总电压</span><span class="v">{{ item.totalV }}</span>
-                </div>
-                <div class="field">
-                  <span class="l">总电流</span><span class="v">{{ item.totalI }}</span>
-                </div>
-                <div class="field">
+              <div class="metrics">
+                <div class="metric metric-soc">
                   <span class="l">SOC</span>
-                  <span class="v">{{ item.soc }}</span>
+                  <span class="v accent">{{ item.soc }}</span>
+                  <span class="bar"><i :style="{ width: socPercent(item.soc) + '%' }"></i></span>
                 </div>
-                <div class="field">
+                <div class="metric">
+                  <span class="l">总电压</span>
+                  <span class="v">{{ item.totalV }}</span>
+                </div>
+                <div class="metric">
+                  <span class="l">总电流</span>
+                  <span class="v">{{ item.totalI }}</span>
+                </div>
+              </div>
+              <div class="extremes">
+                <div class="extreme">
                   <span class="l">最高单体</span><span class="v">{{ item.cellMax }}</span>
                 </div>
-                <div class="field">
+                <div class="extreme">
                   <span class="l">最低单体</span><span class="v">{{ item.cellMin }}</span>
                 </div>
-                <div class="field">
+                <div class="extreme">
                   <span class="l">最高温度</span><span class="v">{{ item.tempMax }}</span>
                 </div>
-                <div class="field">
+                <div class="extreme">
                   <span class="l">最低温度</span><span class="v">{{ item.tempMin }}</span>
                 </div>
               </div>
               <div class="card-actions">
-                <button class="detail-btn" type="button" @click="go(packPath(item.id))">
+                <button class="detail-btn primary" type="button" @click="go(packPath(item.id))">
                   查看详情
                 </button>
                 <button
@@ -97,6 +102,12 @@ function go(path) {
   if (router.currentRoute.value.path !== path) {
     router.push(path)
   }
+}
+
+function socPercent(value) {
+  const number = Number.parseFloat(value)
+  if (Number.isNaN(number)) return 0
+  return Math.min(100, Math.max(0, number))
 }
 </script>
 
@@ -234,61 +245,129 @@ function go(path) {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   align-content: start;
-  gap: 12px;
+  gap: 16px;
 }
 
 .pack-card {
-  background: var(--bg-surface);
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(41, 182, 246, 0.08), transparent 72px), var(--bg-surface);
   border: 1px solid var(--border-line);
   border-radius: var(--r-card);
-  padding: 12px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 14px;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease;
 }
 
-.card-header {
+.pack-card:hover {
+  border-color: #3c5486;
+  background: linear-gradient(180deg, rgba(41, 182, 246, 0.12), transparent 72px), #1c3158;
+}
+
+.pack-card > :not(.watermark) {
+  position: relative;
+  z-index: 1;
+}
+
+.watermark {
+  position: absolute;
+  right: -4px;
+  top: -18px;
+  z-index: 0;
+  font-family: var(--font-mono);
+  font-size: 92px;
+  font-weight: 700;
+  line-height: 1;
+  color: rgba(41, 182, 246, 0.08);
+  -webkit-text-stroke: 1px rgba(41, 182, 246, 0.22);
+  pointer-events: none;
+  user-select: none;
+}
+
+.card-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
 }
 
-.card-header .title {
-  font-size: 16px;
+.pack-name {
+  font-size: 18px;
   font-weight: 600;
+  letter-spacing: 0.02em;
   color: var(--text-primary);
 }
 
-.card-divider {
-  height: 1px;
-  background: var(--divider-card);
-}
-
-.field-grid {
+.metrics {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  align-content: start;
-  gap: 6px 10px;
+  grid-template-columns: 1.3fr 1fr 1fr;
+  gap: 10px;
 }
 
-.field {
+.metric {
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 4px;
 }
 
-.field .l {
-  font-size: 10px;
+.metric .l,
+.extreme .l {
+  font-size: 11px;
   color: var(--text-secondary);
   white-space: nowrap;
 }
 
-.field .v {
+.metric .v,
+.extreme .v {
   font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 16px;
+  font-weight: 600;
   color: var(--text-primary);
   white-space: nowrap;
+}
+
+.metric .v.accent {
+  color: var(--accent);
+}
+
+.bar {
+  height: 3px;
+  border-radius: 3px;
+  background: rgba(41, 182, 246, 0.16);
+  overflow: hidden;
+}
+
+.bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #1e88c7, var(--accent));
+}
+
+.extremes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.extreme {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(15, 29, 56, 0.55);
+}
+
+.extreme .v {
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .card-actions {
@@ -299,20 +378,36 @@ function go(path) {
 .detail-btn {
   flex: 1;
   min-width: 0;
-  height: 30px;
-  padding: 0 4px;
+  height: 32px;
+  padding: 0 8px;
   border: 1px solid var(--border-btn);
   border-radius: var(--r-btn);
-  background: var(--bg-elevated);
+  background: transparent;
   font-family: var(--font-sans);
   font-size: 12px;
   font-weight: 500;
-  color: var(--accent);
+  color: var(--text-secondary);
   cursor: pointer;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease;
+}
+
+.detail-btn.primary {
+  border-color: rgba(41, 182, 246, 0.45);
+  background: rgba(41, 182, 246, 0.14);
+  color: #7dd3fc;
 }
 
 .detail-btn:hover {
-  background: #2a4474;
   border-color: #4a639a;
+  color: var(--text-primary);
+}
+
+.detail-btn.primary:hover {
+  background: rgba(41, 182, 246, 0.24);
+  border-color: var(--accent);
+  color: #e0f2fe;
 }
 </style>
