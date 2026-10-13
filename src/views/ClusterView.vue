@@ -17,7 +17,6 @@
             <h1 class="title">{{ clusterName }}</h1>
           </div>
           <div class="tb-right">
-            <span class="cluster-status" :class="toneOf(clusterStatus)">{{ clusterStatus }}</span>
             <span class="updated">最后更新 14:32:05</span>
           </div>
         </header>
@@ -26,20 +25,12 @@
         <main class="content">
           <div class="section-header">
             <div class="sub">8 个 PACK 运行状态</div>
-            <div class="legend">
-              <div class="legend-item"><span class="d ok"></span><span class="t">正常</span></div>
-              <div class="legend-item"><span class="d warn"></span><span class="t">预警</span></div>
-              <div class="legend-item">
-                <span class="d error"></span><span class="t">异常</span>
-              </div>
-            </div>
           </div>
 
           <div class="pack-grid">
             <article v-for="item in packs" :key="item.id" class="pack-card">
               <div class="card-header">
                 <span class="title">{{ item.title }}</span>
-                <span class="status-pill" :class="toneOf(item.status)">{{ item.status }}</span>
               </div>
               <div class="card-divider"></div>
               <div class="field-grid">
@@ -51,7 +42,7 @@
                 </div>
                 <div class="field">
                   <span class="l">SOC</span>
-                  <span class="v" :class="toneOf(item.status)">{{ item.soc }}</span>
+                  <span class="v">{{ item.soc }}</span>
                 </div>
                 <div class="field">
                   <span class="l">最高单体</span><span class="v">{{ item.cellMax }}</span>
@@ -97,11 +88,6 @@ const router = useRouter()
 const clusterId = computed(() => String(route.params.id || '1'))
 const clusterName = computed(() => `${clusterId.value}簇`)
 const packs = computed(() => getPacks(clusterId.value))
-const clusterStatus = computed(() => {
-  if (packs.value.some((pack) => pack.status === '异常')) return '异常'
-  if (packs.value.some((pack) => pack.status === '预警')) return '预警'
-  return '正常'
-})
 
 function packPath(packId) {
   return `/cluster/${clusterId.value}/pack/${packId}`
@@ -111,12 +97,6 @@ function go(path) {
   if (router.currentRoute.value.path !== path) {
     router.push(path)
   }
-}
-
-const tones = { 正常: 'ok', 预警: 'warn', 异常: 'error' }
-
-function toneOf(status) {
-  return tones[status] || 'ok'
 }
 </script>
 
@@ -132,15 +112,7 @@ function toneOf(status) {
   --text-secondary: #a1a1aa;
   --text-muted: #71717a;
   --accent: #29b6f6;
-  --ok: #4caf50;
-  --warn: #f2c94c;
-  --error: #ff5252;
-  --pill-ok: #182c1a;
-  --pill-warn: #2e2a16;
-  --pill-error: #2e1818;
   --r-logo: 3px;
-  --r-dot: 4px;
-  --r-pill: 6px;
   --r-tab: 8px;
   --r-btn: 8px;
   --r-card: 12px;
@@ -156,14 +128,13 @@ function toneOf(status) {
   padding: 0;
 }
 
-#stage {
-  width: 1280px;
-  height: 800px;
+#stage,
+.screen {
+  width: 100%;
+  height: 100%;
 }
 
 .screen {
-  width: 1280px;
-  height: 800px;
   background: var(--bg-page);
   display: flex;
   flex-direction: column;
@@ -199,27 +170,6 @@ function toneOf(status) {
   gap: 10px;
 }
 
-.cluster-status {
-  padding: 3px 8px;
-  border-radius: var(--r-pill);
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 17px;
-}
-
-.cluster-status.ok {
-  background: var(--pill-ok);
-  color: var(--ok);
-}
-.cluster-status.warn {
-  background: var(--pill-warn);
-  color: var(--warn);
-}
-.cluster-status.error {
-  background: var(--pill-error);
-  color: var(--error);
-}
-
 .updated {
   font-family: var(--font-mono);
   font-size: 13px;
@@ -240,7 +190,7 @@ function toneOf(status) {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .section-header {
@@ -279,45 +229,11 @@ function toneOf(status) {
   color: var(--text-secondary);
 }
 
-.legend {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.legend-item .d {
-  width: 8px;
-  height: 8px;
-  border-radius: var(--r-dot);
-}
-
-.legend-item .d.ok {
-  background: var(--ok);
-}
-.legend-item .d.warn {
-  background: var(--warn);
-}
-.legend-item .d.error {
-  background: var(--error);
-}
-
-.legend-item .t {
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
 .pack-grid {
-  flex: 1;
-  min-height: 0;
+  flex: none;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: 1fr 1fr;
+  align-content: start;
   gap: 12px;
 }
 
@@ -329,7 +245,6 @@ function toneOf(status) {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  min-height: 0;
 }
 
 .card-header {
@@ -344,34 +259,12 @@ function toneOf(status) {
   color: var(--text-primary);
 }
 
-.status-pill {
-  padding: 3px 8px;
-  border-radius: var(--r-pill);
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.4;
-}
-
-.status-pill.ok {
-  background: var(--pill-ok);
-  color: var(--ok);
-}
-.status-pill.warn {
-  background: var(--pill-warn);
-  color: var(--warn);
-}
-.status-pill.error {
-  background: var(--pill-error);
-  color: var(--error);
-}
-
 .card-divider {
   height: 1px;
   background: var(--divider-card);
 }
 
 .field-grid {
-  flex: 1;
   display: grid;
   grid-template-columns: 1fr 1fr;
   align-content: start;
@@ -396,16 +289,6 @@ function toneOf(status) {
   font-weight: 500;
   color: var(--text-primary);
   white-space: nowrap;
-}
-
-.field .v.ok {
-  color: var(--ok);
-}
-.field .v.warn {
-  color: var(--warn);
-}
-.field .v.error {
-  color: var(--error);
 }
 
 .card-actions {

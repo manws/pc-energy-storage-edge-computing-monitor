@@ -229,8 +229,8 @@ function onPointerUp() {
 }
 
 .stage {
-  width: 1280px;
-  height: 800px;
+  width: 100%;
+  height: 100%;
   background: var(--bg-page);
   overflow: hidden;
   display: flex;
@@ -386,7 +386,7 @@ function onPointerUp() {
   align-content: flex-start;
 }
 .field-card {
-  width: 580px;
+  width: calc(50% - 8px);
   display: flex;
   flex-direction: column;
   gap: 10px;

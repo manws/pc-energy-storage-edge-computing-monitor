@@ -15,11 +15,6 @@
           </button>
           <h1 class="page-title">{{ clusterName }} · {{ packName }} · 算法估算</h1>
         </div>
-        <div class="status">
-          <div class="status-dot"></div>
-          <span class="status-text">在线</span>
-          <span class="status-time">最后更新 14:32:05</span>
-        </div>
       </header>
 
       <div class="divider"></div>
@@ -236,8 +231,8 @@ function go(path) {
 }
 
 .stage {
-  width: 1280px;
-  height: 800px;
+  width: 100%;
+  height: 100%;
   background: var(--bg);
   display: flex;
   flex-direction: column;
@@ -284,30 +279,6 @@ function go(path) {
   font-weight: 600;
   line-height: 24px;
   color: var(--text);
-}
-
-.status {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 4px;
-  background: var(--green);
-}
-
-.status-text {
-  font-size: 13px;
-  color: var(--muted);
-}
-
-.status-time {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  color: var(--dim);
 }
 
 .divider {
@@ -444,8 +415,8 @@ function go(path) {
 }
 
 .card-soc {
-  height: 156px;
-  flex-shrink: 0;
+  flex: 0 0 auto;
+  min-height: 132px;
 }
 
 .soc-grid {
@@ -471,8 +442,8 @@ function go(path) {
 }
 
 .chart-row {
-  height: 188px;
-  flex-shrink: 0;
+  flex: 1.15;
+  min-height: 200px;
   display: flex;
   gap: 12px;
 }

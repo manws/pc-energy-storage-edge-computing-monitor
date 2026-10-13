@@ -8,10 +8,6 @@
             <span class="logo"></span>
             <span class="system-name">储能 · 边缘计算监控系统</span>
           </div>
-          <nav class="tabs">
-            <span class="tab is-active" @click="go('/')">实时监控</span>
-            <span class="tab" @click="go('/settings/soc')">系统设置</span>
-          </nav>
           <div class="status">
             <span class="dot"></span>
             <span class="online">在线</span>
@@ -27,13 +23,6 @@
               <div class="h">边缘整体监控</div>
               <div class="sub">5 簇运行总览</div>
             </div>
-            <div class="legend">
-              <div class="legend-item"><span class="d ok"></span><span class="t">正常</span></div>
-              <div class="legend-item"><span class="d warn"></span><span class="t">预警</span></div>
-              <div class="legend-item">
-                <span class="d error"></span><span class="t">异常</span>
-              </div>
-            </div>
           </div>
 
           <div class="cluster-grid">
@@ -47,7 +36,6 @@
               <span class="watermark" aria-hidden="true">{{ item.id }}</span>
               <div class="card-header">
                 <span class="title">{{ item.title }}</span>
-                <span class="status-pill" :class="toneOf(item.status)">{{ item.status }}</span>
               </div>
             </button>
           </div>
@@ -70,12 +58,6 @@ function go(path) {
     router.push(path)
   }
 }
-
-const tones = { 正常: 'ok', 预警: 'warn', 异常: 'error' }
-
-function toneOf(status) {
-  return tones[status] || 'ok'
-}
 </script>
 
 <style scoped>
@@ -83,7 +65,6 @@ function toneOf(status) {
   /* Surfaces */
   --bg-page: #0f1d38;
   --bg-surface: #18294d;
-  --bg-elevated: #243b66;
   --border-line: #2a3f68;
 
   /* Text */
@@ -94,17 +75,10 @@ function toneOf(status) {
   /* Semantic */
   --accent: #29b6f6;
   --ok: #4caf50;
-  --warn: #f2c94c;
-  --error: #ff5252;
-  --pill-ok: #182c1a;
-  --pill-warn: #2e2a16;
-  --pill-error: #2e1818;
 
   /* Radius */
   --r-logo: 3px;
   --r-dot: 4px;
-  --r-pill: 6px;
-  --r-tab: 8px;
   --r-card: 12px;
 
   --font-sans: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
@@ -117,15 +91,13 @@ function toneOf(status) {
   padding: 0;
 }
 
-/* ---------- Stage: 原始画布 1280×800 + 等比缩放 ---------- */
-#stage {
-  width: 1280px;
-  height: 800px;
+#stage,
+.screen {
+  width: 100%;
+  height: 100%;
 }
 
 .screen {
-  width: 1280px;
-  height: 800px;
   background: var(--bg-page);
   display: flex;
   flex-direction: column;
@@ -161,37 +133,6 @@ function toneOf(status) {
 .brand .system-name {
   font-size: 16px;
   font-weight: 600;
-  color: var(--text-primary);
-}
-
-.tabs {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 4px;
-}
-
-.tab {
-  padding: 7px 14px;
-  border-radius: var(--r-tab);
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  background: transparent;
-  cursor: pointer;
-  user-select: none;
-  transition:
-    background 0.18s ease,
-    color 0.18s ease;
-}
-
-.tab:hover {
-  color: var(--text-primary);
-  background: rgba(36, 59, 102, 0.55);
-}
-
-.tab.is-active {
-  background: var(--bg-elevated);
   color: var(--text-primary);
 }
 
@@ -265,42 +206,6 @@ function toneOf(status) {
   color: var(--text-secondary);
 }
 
-.legend {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 16px;
-}
-
-.legend-item {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 6px;
-}
-
-.legend-item .d {
-  width: 8px;
-  height: 8px;
-  border-radius: var(--r-dot);
-}
-
-.legend-item .d.ok {
-  background: var(--ok);
-}
-.legend-item .d.warn {
-  background: var(--warn);
-}
-.legend-item .d.error {
-  background: var(--error);
-}
-
-.legend-item .t {
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--text-secondary);
-}
-
 /* ---------- Cluster Grid ---------- */
 .cluster-grid {
   flex: none;
@@ -369,36 +274,8 @@ function toneOf(status) {
   color: var(--text-primary);
 }
 
-.status-pill {
-  padding: 3px 8px;
-  border-radius: var(--r-pill);
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.4;
-}
-
-.status-pill.ok {
-  background: var(--pill-ok);
-  color: var(--ok);
-}
-.status-pill.warn {
-  background: var(--pill-warn);
-  color: var(--warn);
-}
-.status-pill.error {
-  background: var(--pill-error);
-  color: var(--error);
-}
-
 .page {
   font-family: var(--font-sans, 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif);
   -webkit-font-smoothing: antialiased;
-}
-.tab,
-.nav-tab,
-.top-tab,
-.setting-tab,
-.st {
-  cursor: pointer;
 }
 </style>

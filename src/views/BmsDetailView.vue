@@ -209,11 +209,9 @@ img {
   display: block;
 }
 
-/* ============ 1280×800 原始画布，等比缩放 ============ */
 .stage {
-  flex: none;
-  width: 1280px;
-  height: 800px;
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   background: var(--bg);
@@ -320,7 +318,7 @@ img {
 /* ---- 仪表盘行 ---- */
 .gauge-row {
   flex: none;
-  height: 216px;
+  height: clamp(216px, 28vh, 280px);
   display: flex;
   gap: 16px;
 }

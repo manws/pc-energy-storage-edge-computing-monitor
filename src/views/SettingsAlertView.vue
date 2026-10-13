@@ -233,10 +233,9 @@ function resetForm() {
   box-sizing: border-box;
 }
 
-/* 1280×800 原始画布，等比缩放居中 */
 #stage {
-  width: 1280px;
-  height: 800px;
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   background: var(--bg);

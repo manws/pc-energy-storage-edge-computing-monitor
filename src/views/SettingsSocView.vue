@@ -163,10 +163,9 @@ function resetForm() {
   box-sizing: border-box;
 }
 
-/* ===== 原始 1280×800 画布，JS 等比缩放居中 ===== */
 .stage {
-  width: 1280px;
-  height: 800px;
+  width: 100%;
+  height: 100%;
   background: var(--bg);
   display: flex;
   flex-direction: column;
@@ -329,7 +328,7 @@ function resetForm() {
   gap: 16px;
 }
 .field {
-  width: 580px;
+  width: calc(50% - 8px);
   display: flex;
   flex-direction: column;
   gap: 10px;
