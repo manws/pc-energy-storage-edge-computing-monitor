@@ -119,6 +119,16 @@ function clusterOf(id) {
   return CLUSTERS[String(id)] || CLUSTERS[1]
 }
 
+function clampPercent(value) {
+  return Number(Math.min(100, Math.max(0, value)).toFixed(1))
+}
+
+function packSoh(clusterId, index, warning) {
+  const rand = random(Number(clusterId || 1) * 419 + (index + 1) * 37)
+  const base = 97.4 - index * 0.22 - (warning ? 2.4 : 0) + (rand() - 0.5) * 0.8
+  return clampPercent(Math.min(99.6, Math.max(90, base)))
+}
+
 function packProfile(clusterId, packId) {
   const cluster = clusterOf(clusterId)
   const index = Math.min(PACK_COUNT, Math.max(1, Number(packId) || 1)) - 1
@@ -151,6 +161,7 @@ function packProfile(clusterId, packId) {
     soe: Number((cluster.soe + shift * 0.15).toFixed(1)),
     sopDischarge: Number((cluster.sopDischarge + shift * 0.12).toFixed(1)),
     sopCharge: Number((cluster.sopCharge + shift * 0.1).toFixed(1)),
+    soh: packSoh(clusterId, index, warning),
     voltageAbnormal: warning ? 4 : 1 + (index % 3 === 0 ? 1 : 0),
     tempAbnormal: warning ? 3 : index % 4 === 0 ? 1 : 0,
     ocvScore: demo ? 0.32 : Number((0.18 + rand() * 0.28).toFixed(2)),
@@ -265,6 +276,14 @@ export function getPackEstimate(clusterId, packId) {
     sopCharge: {
       actual: pack.sopCharge,
       predict: near(predictRand, pack.sopCharge, 0.04, 1)
+    },
+    soc: {
+      actual: pack.soc,
+      predict: clampPercent(near(predictRand, pack.soc, 0.02, 1))
+    },
+    soh: {
+      actual: pack.soh,
+      predict: clampPercent(near(predictRand, pack.soh, 0.012, 1))
     },
     cells,
     ocv: { ...ocvSeries(pack), score: pack.ocvScore },

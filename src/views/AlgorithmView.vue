@@ -69,6 +69,38 @@
               </div>
             </div>
           </div>
+          <div class="param-card">
+            <div class="param-label">SOC · 荷电状态</div>
+            <div class="dual">
+              <div class="pair">
+                <span class="pair-k">真实值</span>
+                <span class="pair-v num-cyan">{{ estimate.soc.actual.toFixed(1) }}</span>
+                <span class="param-unit">%</span>
+              </div>
+              <span class="pair-split"></span>
+              <div class="pair">
+                <span class="pair-k">预测值</span>
+                <span class="pair-v num-cyan">{{ estimate.soc.predict.toFixed(1) }}</span>
+                <span class="param-unit">%</span>
+              </div>
+            </div>
+          </div>
+          <div class="param-card">
+            <div class="param-label">SOH · 健康状态</div>
+            <div class="dual">
+              <div class="pair">
+                <span class="pair-k">真实值</span>
+                <span class="pair-v num-violet">{{ estimate.soh.actual.toFixed(1) }}</span>
+                <span class="param-unit">%</span>
+              </div>
+              <span class="pair-split"></span>
+              <div class="pair">
+                <span class="pair-k">预测值</span>
+                <span class="pair-v num-violet">{{ estimate.soh.predict.toFixed(1) }}</span>
+                <span class="param-unit">%</span>
+              </div>
+            </div>
+          </div>
         </section>
 
         <section class="card card-soc">
@@ -216,6 +248,8 @@ function go(path) {
   --blue: #29b6f6;
   --amber: #f59e0b;
   --green: #4caf50;
+  --cyan: #2dd4bf;
+  --violet: #a78bfa;
   --red: #ff5252;
   --yellow: #f2c94c;
   --font-sans: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
@@ -300,15 +334,16 @@ function go(path) {
   height: 72px;
   flex-shrink: 0;
   display: flex;
-  gap: 12px;
+  gap: 10px;
 }
 
 .param-card {
   flex: 1;
+  min-width: 0;
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 10px 16px;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -318,12 +353,13 @@ function go(path) {
 .param-label {
   font-size: 13px;
   color: var(--muted);
+  white-space: nowrap;
 }
 
 .dual {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .pair {
@@ -331,6 +367,7 @@ function go(path) {
   align-items: baseline;
   gap: 6px;
   min-width: 0;
+  white-space: nowrap;
 }
 
 .pair-k {
@@ -340,7 +377,7 @@ function go(path) {
 
 .pair-v {
   font-family: var(--font-mono);
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
   line-height: 1;
 }
@@ -364,6 +401,12 @@ function go(path) {
 }
 .num-green {
   color: var(--green);
+}
+.num-cyan {
+  color: var(--cyan);
+}
+.num-violet {
+  color: var(--violet);
 }
 
 .card {
