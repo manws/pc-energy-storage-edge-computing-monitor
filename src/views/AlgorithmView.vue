@@ -3,7 +3,7 @@
     <div id="stage" class="page stage">
       <header class="top-bar">
         <div class="tb-left">
-          <button class="back" type="button" @click="go('/cluster/' + estimate.clusterId)">
+          <button class="back" type="button" @click="go('/cluster/' + route.params.clusterId)">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path
                 fill="#A1A1AA"
@@ -20,214 +20,312 @@
       <div class="divider"></div>
 
       <main class="content">
-        <section class="param-row">
-          <div class="param-card">
-            <div class="param-label">SOE · 能量估算</div>
-            <div class="dual">
-              <div class="pair">
-                <span class="pair-k">真实值</span>
-                <span class="pair-v num-blue">{{ estimate.soe.actual.toFixed(1) }}</span>
-                <span class="param-unit">kWh</span>
-              </div>
-              <span class="pair-split"></span>
-              <div class="pair">
-                <span class="pair-k">预测值</span>
-                <span class="pair-v num-blue">{{ estimate.soe.predict.toFixed(1) }}</span>
-                <span class="param-unit">kWh</span>
-              </div>
-            </div>
-          </div>
-          <div class="param-card">
-            <div class="param-label">SOP · 放电功率</div>
-            <div class="dual">
-              <div class="pair">
-                <span class="pair-k">真实值</span>
-                <span class="pair-v num-amber">{{ estimate.sopDischarge.actual.toFixed(1) }}</span>
-                <span class="param-unit">kW</span>
-              </div>
-              <span class="pair-split"></span>
-              <div class="pair">
-                <span class="pair-k">预测值</span>
-                <span class="pair-v num-amber">{{ estimate.sopDischarge.predict.toFixed(1) }}</span>
-                <span class="param-unit">kW</span>
-              </div>
-            </div>
-          </div>
-          <div class="param-card">
-            <div class="param-label">SOP · 充电功率</div>
-            <div class="dual">
-              <div class="pair">
-                <span class="pair-k">真实值</span>
-                <span class="pair-v num-green">{{ estimate.sopCharge.actual.toFixed(1) }}</span>
-                <span class="param-unit">kW</span>
-              </div>
-              <span class="pair-split"></span>
-              <div class="pair">
-                <span class="pair-k">预测值</span>
-                <span class="pair-v num-green">{{ estimate.sopCharge.predict.toFixed(1) }}</span>
-                <span class="param-unit">kW</span>
-              </div>
-            </div>
-          </div>
-          <div class="param-card">
-            <div class="param-label">SOC · 荷电状态</div>
-            <div class="dual">
-              <div class="pair">
-                <span class="pair-k">真实值</span>
-                <span class="pair-v num-cyan">{{ estimate.soc.actual.toFixed(1) }}</span>
-                <span class="param-unit">%</span>
-              </div>
-              <span class="pair-split"></span>
-              <div class="pair">
-                <span class="pair-k">预测值</span>
-                <span class="pair-v num-cyan">{{ estimate.soc.predict.toFixed(1) }}</span>
-                <span class="param-unit">%</span>
-              </div>
-            </div>
-          </div>
-          <div class="param-card">
-            <div class="param-label">SOH · 健康状态</div>
-            <div class="dual">
-              <div class="pair">
-                <span class="pair-k">真实值</span>
-                <span class="pair-v num-violet">{{ estimate.soh.actual.toFixed(1) }}</span>
-                <span class="param-unit">%</span>
-              </div>
-              <span class="pair-split"></span>
-              <div class="pair">
-                <span class="pair-k">预测值</span>
-                <span class="pair-v num-violet">{{ estimate.soh.predict.toFixed(1) }}</span>
-                <span class="param-unit">%</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="card card-soc">
-          <div class="card-head">
-            <div class="card-title">SOC 估算 · 52 单体</div>
-            <div class="card-note">单体序号 = SOC</div>
-          </div>
-          <div class="soc-grid">
-            <span v-for="cell in estimate.cells" :key="cell.index" class="soc-lab">
-              单体{{ String(cell.index).padStart(2, '0') }}={{ Number(cell.soc).toFixed(1) }}%
-            </span>
-          </div>
-        </section>
-
-        <section class="chart-row">
-          <article class="card card-chart">
-            <header class="card-head">
-              <div class="head-copy">
-                <div class="card-title">OCV-预测曲线</div>
-                <div class="card-note">横轴 容量 Q · 纵轴 电压 V</div>
-              </div>
-              <div class="head-side">
-                <div class="legend">
-                  <span class="lg"><i class="dot blue"></i>真实值</span>
-                  <span class="lg"><i class="dot amber"></i>预测值</span>
+        <p v-if="error" class="state">{{ error }}</p>
+        <p v-else-if="!estimate" class="state">加载中</p>
+        <template v-else>
+          <section class="param-row">
+            <div class="param-card">
+              <div class="param-label">SOE · 能量估算</div>
+              <div class="dual">
+                <div class="pair">
+                  <span class="pair-k">真实值</span>
+                  <span class="pair-v num-blue">{{ estimate.soe.actual.toFixed(2) }}</span>
+                  <span class="param-unit">kWh</span>
                 </div>
-                <span class="metric">评价指标 = {{ estimate.ocv.score.toFixed(2) }}%</span>
-              </div>
-            </header>
-            <div class="chart">
-              <TrendChart :categories="estimate.ocv.categories" :series="ocvSeries" />
-            </div>
-          </article>
-
-          <article class="card card-chart">
-            <header class="card-head">
-              <div class="head-copy">
-                <div class="card-title">容量轨迹预测</div>
-                <div class="card-note">横轴 未来循环次数 · 纵轴 容量 (Ah)</div>
-              </div>
-              <div class="head-side">
-                <div class="legend">
-                  <span class="lg"><i class="dot blue"></i>真实值</span>
-                  <span class="lg"><i class="dot amber"></i>预测值</span>
+                <span class="pair-split"></span>
+                <div class="pair">
+                  <span class="pair-k">预测值</span>
+                  <span class="pair-v num-blue">{{ estimate.soe.predict.toFixed(2) }}</span>
+                  <span class="param-unit">kWh</span>
                 </div>
-                <span class="metric">MAPE = {{ estimate.capacity.mape.toFixed(2) }}%</span>
               </div>
-            </header>
-            <div class="chart">
-              <TrendChart :categories="estimate.capacity.categories" :series="capacitySeries" />
             </div>
-          </article>
-        </section>
+            <div class="param-card">
+              <div class="param-label">SOP · 放电功率（瞬时峰值）</div>
+              <div class="dual">
+                <div class="pair">
+                  <span class="pair-k">真实值</span>
+                  <span class="pair-v num-amber">{{
+                    estimate.sopDischarge.actual.toFixed(2)
+                  }}</span>
+                  <span class="param-unit">kW</span>
+                </div>
+                <span class="pair-split"></span>
+                <div class="pair">
+                  <span class="pair-k">预测值</span>
+                  <span class="pair-v num-amber">{{
+                    estimate.sopDischarge.predict.toFixed(2)
+                  }}</span>
+                  <span class="param-unit">kW</span>
+                </div>
+              </div>
+            </div>
+            <div class="param-card">
+              <div class="param-label">SOP · 充电功率（瞬时峰值）</div>
+              <div class="dual">
+                <div class="pair">
+                  <span class="pair-k">真实值</span>
+                  <span class="pair-v num-green">{{ estimate.sopCharge.actual.toFixed(2) }}</span>
+                  <span class="param-unit">kW</span>
+                </div>
+                <span class="pair-split"></span>
+                <div class="pair">
+                  <span class="pair-k">预测值</span>
+                  <span class="pair-v num-green">{{ estimate.sopCharge.predict.toFixed(2) }}</span>
+                  <span class="param-unit">kW</span>
+                </div>
+              </div>
+            </div>
+            <div class="param-card">
+              <div class="param-label">SOC · 荷电状态</div>
+              <div class="dual">
+                <div class="pair">
+                  <span class="pair-k">真实值</span>
+                  <span class="pair-v num-cyan">{{ estimate.soc.actual.toFixed(2) }}</span>
+                  <span class="param-unit">%</span>
+                </div>
+                <span class="pair-split"></span>
+                <div class="pair">
+                  <span class="pair-k">预测值</span>
+                  <span class="pair-v num-cyan">{{ estimate.soc.predict.toFixed(2) }}</span>
+                  <span class="param-unit">%</span>
+                </div>
+              </div>
+            </div>
+            <div class="param-card">
+              <div class="param-label">SOH · 健康状态</div>
+              <div class="dual">
+                <div class="pair">
+                  <span class="pair-k">真实值</span>
+                  <span class="pair-v num-violet">{{ estimate.soh.actual.toFixed(2) }}</span>
+                  <span class="param-unit">%</span>
+                </div>
+                <span class="pair-split"></span>
+                <div class="pair">
+                  <span class="pair-k">预测值</span>
+                  <span class="pair-v num-violet">{{ estimate.soh.predict.toFixed(2) }}</span>
+                  <span class="param-unit">%</span>
+                </div>
+              </div>
+            </div>
+          </section>
 
-        <section class="bottom-row">
-          <article class="card card-incons">
+          <section class="card card-soc">
             <div class="card-head">
-              <div class="card-title">不一致性（单体）· 52 单体</div>
-              <div class="card-note warn-note">
-                异常 {{ voltageAbnormalCount }} · 绿正常 / 黄异常
-              </div>
+              <div class="card-title">SOC 估算 · 52 单体</div>
+              <div class="card-note">点击单体，下方曲线跟随切换</div>
             </div>
-            <div class="chart">
-              <CellGridChart :flags="voltageFlags" :cols="13" />
+            <div v-if="!estimate.cells.length" class="empty">暂无单体 SOC</div>
+            <div v-else class="soc-grid">
+              <button
+                v-for="cell in estimate.cells"
+                :key="cell.index"
+                type="button"
+                class="soc-lab"
+                :class="{ 'is-selected': cell.index === selectedCell }"
+                @click="selectedCell = cell.index"
+              >
+                单体{{ String(cell.index).padStart(2, '0') }}={{ Number(cell.soc).toFixed(2) }}%
+              </button>
             </div>
-          </article>
+          </section>
 
-          <article class="card card-incons">
-            <div class="card-head">
-              <div class="card-title">不一致性（温度）· 52 单体</div>
-              <div class="card-note warn-note">
-                异常 {{ temperatureAbnormalCount }} · 绿正常 / 黄异常
+          <section class="chart-row">
+            <article class="card card-chart">
+              <header class="card-head">
+                <div class="head-copy">
+                  <div class="card-title">OCV-预测曲线 · 单体{{ cellLabel }}</div>
+                  <div class="card-note">横轴 容量 Q · 纵轴 电压 V</div>
+                </div>
+                <div class="head-side">
+                  <div class="legend">
+                    <span class="lg"><i class="dot blue"></i>真实值</span>
+                    <span class="lg"><i class="dot amber"></i>预测值</span>
+                  </div>
+                  <span class="metric">评价指标 = {{ metricText(cellCurves?.ocv.score) }}%</span>
+                </div>
+              </header>
+              <div class="chart">
+                <div v-if="cellError" class="empty">{{ cellError }}</div>
+                <div v-else-if="!hasOcv" class="empty">{{ cellLoading ? '加载中' : '暂无曲线' }}</div>
+                <TrendChart v-else :series="ocvSeries" />
               </div>
-            </div>
-            <div class="chart">
-              <CellGridChart :flags="temperatureFlags" :cols="13" />
-            </div>
-          </article>
+            </article>
 
-          <article class="card card-warn">
-            <div class="card-title">预警估算</div>
-            <div class="table">
-              <div class="thead">
-                <span class="col-idx">序号</span>
-                <span class="col-name">故障名称</span>
-                <span class="col-time">故障时间</span>
+            <article class="card card-chart">
+              <header class="card-head">
+                <div class="head-copy">
+                  <div class="card-title">容量轨迹预测 · 单体{{ cellLabel }}</div>
+                  <div class="card-note">
+                    {{
+                      cellCurves?.capacity.showXAxis
+                        ? '横轴 循环次数 · 纵轴 容量 (Ah)'
+                        : '纵轴 容量 (Ah)'
+                    }}
+                  </div>
+                </div>
+                <div class="head-side">
+                  <div class="legend">
+                    <span class="lg"><i class="dot blue"></i>真实值</span>
+                    <span class="lg"><i class="dot amber"></i>预测值</span>
+                  </div>
+                  <span class="metric">MAPE = {{ metricText(cellCurves?.capacity.mape) }}%</span>
+                </div>
+              </header>
+              <div class="chart">
+                <div v-if="cellError" class="empty">{{ cellError }}</div>
+                <div v-else-if="!hasCapacity" class="empty">
+                  {{ cellLoading ? '加载中' : '暂无曲线' }}
+                </div>
+                <TrendChart
+                  v-else
+                  :categories="cellCurves.capacity.categories"
+                  :series="capacitySeries"
+                  :show-x-axis="cellCurves.capacity.showXAxis"
+                />
               </div>
-              <div v-for="(item, index) in estimate.warnings" :key="item.name" class="trow">
-                <span class="idx col-idx">{{ String(index + 1).padStart(2, '0') }}</span>
-                <span class="name col-name" :class="'name-' + item.level">{{ item.name }}</span>
-                <span class="time col-time">{{ item.time }}</span>
+            </article>
+          </section>
+
+          <section class="bottom-row">
+            <article class="card card-incons">
+              <div class="card-head">
+                <div class="card-title">不一致性（单体）· 52 单体</div>
+                <div class="card-note warn-note">
+                  异常 {{ voltageAbnormalCount }} · 绿正常 / 黄异常
+                </div>
               </div>
-            </div>
-          </article>
-        </section>
+              <div class="chart">
+                <div v-if="!voltageFlags.length" class="empty">暂无单体数据</div>
+                <CellGridChart v-else :flags="voltageFlags" :cols="13" />
+              </div>
+            </article>
+
+            <article class="card card-incons">
+              <div class="card-head">
+                <div class="card-title">不一致性（温度）· 52 单体</div>
+                <div class="card-note warn-note">
+                  异常 {{ temperatureAbnormalCount }} · 绿正常 / 黄异常
+                </div>
+              </div>
+              <div class="chart">
+                <div v-if="!temperatureFlags.length" class="empty">暂无单体数据</div>
+                <CellGridChart v-else :flags="temperatureFlags" :cols="13" />
+              </div>
+            </article>
+
+            <article class="card card-warn">
+              <div class="card-title">预警估算</div>
+              <div v-if="!estimate.warnings.length && !estimate.alarmSummary" class="empty">
+                当前无告警
+              </div>
+              <div v-else-if="estimate.warnings.length" class="table">
+                <div class="thead">
+                  <span class="col-idx">序号</span>
+                  <span class="col-name">故障名称</span>
+                  <span class="col-time">故障时间</span>
+                </div>
+                <div
+                  v-for="(item, index) in estimate.warnings"
+                  :key="item.name + index"
+                  class="trow"
+                >
+                  <span class="idx col-idx">{{ String(index + 1).padStart(2, '0') }}</span>
+                  <span class="name col-name" :class="'name-' + item.level">{{ item.name }}</span>
+                  <span class="time col-time">{{ item.time }}</span>
+                </div>
+              </div>
+              <p v-if="estimate.alarmSummary" class="alarm-summary">{{ estimate.alarmSummary }}</p>
+            </article>
+          </section>
+        </template>
       </main>
     </div>
   </StageFrame>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import StageFrame from '@/components/StageFrame.vue'
 import TrendChart from '@/components/charts/TrendChart.vue'
 import CellGridChart from '@/components/charts/CellGridChart.vue'
-import { getPackEstimate } from '@/mock/cluster'
+import { loadCellCurves, loadPackEstimate } from '@/api/edge'
 
 const route = useRoute()
 const router = useRouter()
-const estimate = computed(() => getPackEstimate(route.params.clusterId, route.params.packId))
-const clusterName = computed(() => `${estimate.value.clusterId}簇`)
-const packName = computed(() => `PACK${estimate.value.packId}`)
-const voltageFlags = computed(() => estimate.value.cells.map((cell) => cell.voltageAbnormal))
-const temperatureFlags = computed(() =>
-  estimate.value.cells.map((cell) => cell.temperatureAbnormal)
+const estimate = ref(null)
+const error = ref('')
+const selectedCell = ref(1)
+const cellCurves = ref(null)
+const cellLoading = ref(false)
+const cellError = ref('')
+let cellRequest = 0
+const clusterName = computed(() => `${route.params.clusterId}簇`)
+const packName = computed(() => `PACK${route.params.packId}`)
+const voltageFlags = computed(() =>
+  (estimate.value?.cells || []).map((cell) => cell.voltageAbnormal)
 )
+const temperatureFlags = computed(() =>
+  (estimate.value?.cells || []).map((cell) => cell.temperatureAbnormal)
+)
+const hasOcv = computed(() => ocvSeries.value.some((item) => item.data.length > 0))
+const hasCapacity = computed(() => capacitySeries.value.some((item) => item.data.length > 0))
 const voltageAbnormalCount = computed(() => voltageFlags.value.filter(Boolean).length)
 const temperatureAbnormalCount = computed(() => temperatureFlags.value.filter(Boolean).length)
+const cellLabel = computed(() => String(selectedCell.value).padStart(2, '0'))
 const ocvSeries = computed(() => [
-  { name: '真实值', color: '#29b6f6', data: estimate.value.ocv.actual },
-  { name: '预测值', color: '#f59e0b', data: estimate.value.ocv.predict }
+  { name: '真实值', color: '#29b6f6', data: cellCurves.value?.ocv.actualPairs || [] },
+  { name: '预测值', color: '#f59e0b', data: cellCurves.value?.ocv.predictPairs || [] }
 ])
 const capacitySeries = computed(() => [
-  { name: '真实值', color: '#29b6f6', data: estimate.value.capacity.actual },
-  { name: '预测值', color: '#f59e0b', data: estimate.value.capacity.predict }
+  { name: '真实值', color: '#29b6f6', data: cellCurves.value?.capacity.actual || [] },
+  { name: '预测值', color: '#f59e0b', data: cellCurves.value?.capacity.predict || [] }
 ])
+
+async function loadCurves(clusterId, packId, cellId) {
+  const token = ++cellRequest
+  cellLoading.value = true
+  cellError.value = ''
+  try {
+    const data = await loadCellCurves(clusterId, packId, cellId)
+    if (token !== cellRequest) return
+    cellCurves.value = data
+  } catch (err) {
+    if (token !== cellRequest) return
+    cellError.value = err.message || '单体曲线加载失败'
+  } finally {
+    if (token === cellRequest) cellLoading.value = false
+  }
+}
+
+watch(
+  () => [route.params.clusterId, route.params.packId],
+  async ([clusterId, packId]) => {
+    estimate.value = null
+    cellCurves.value = null
+    error.value = ''
+    selectedCell.value = 1
+    try {
+      estimate.value = await loadPackEstimate(clusterId, packId)
+      const firstCell = estimate.value.cells[0]?.index || 1
+      selectedCell.value = firstCell
+      await loadCurves(clusterId, packId, firstCell)
+    } catch (err) {
+      error.value = err.message || '加载失败'
+    }
+  },
+  { immediate: true }
+)
+
+watch(selectedCell, (cellId, previous) => {
+  if (!estimate.value || cellId === previous) return
+  loadCurves(route.params.clusterId, route.params.packId, cellId)
+})
+
+function metricText(value) {
+  return Number.isFinite(value) ? value.toFixed(2) : '--'
+}
 
 function go(path) {
   if (router.currentRoute.value.path !== path) {
@@ -237,6 +335,33 @@ function go(path) {
 </script>
 
 <style scoped>
+.state,
+.empty {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.state {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+}
+
+.chart > .empty {
+  position: absolute;
+  inset: 0;
+}
+
 .page {
   --bg: #0f1d38;
   --card: #18294d;
@@ -459,29 +584,41 @@ function go(path) {
 
 .card-soc {
   flex: 0 0 auto;
-  min-height: 132px;
+  min-height: 168px;
 }
 
 .soc-grid {
   flex: 1;
   min-height: 0;
-  display: flex;
-  flex-wrap: wrap;
-  align-content: flex-start;
-  gap: 4px 6px;
+  display: grid;
+  grid-template-columns: repeat(13, minmax(0, 1fr));
+  grid-template-rows: repeat(4, minmax(0, 1fr));
+  gap: 6px;
   overflow: hidden;
 }
 
 .soc-lab {
-  height: 20px;
-  padding: 0 6px;
+  min-width: 0;
+  padding: 0 4px;
+  border: 1px solid transparent;
   border-radius: 4px;
   background: var(--card-2);
   font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 20px;
+  font-size: 13px;
+  line-height: 1;
   color: var(--text);
   white-space: nowrap;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.soc-lab.is-selected {
+  border-color: var(--blue);
+  background: rgba(41, 182, 246, 0.16);
+  color: var(--blue);
 }
 
 .chart-row {
@@ -558,6 +695,18 @@ function go(path) {
   min-height: 0;
   display: flex;
   flex-direction: column;
+  overflow: auto;
+}
+
+.alarm-summary {
+  flex: none;
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--card-2);
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--muted);
 }
 
 .thead,
@@ -581,9 +730,9 @@ function go(path) {
 }
 
 .trow {
-  flex: 1;
-  padding: 0 8px;
-  min-height: 0;
+  flex: none;
+  min-height: 28px;
+  padding: 4px 8px;
 }
 
 .col-idx {

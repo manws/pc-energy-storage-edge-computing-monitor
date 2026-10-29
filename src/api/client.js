@@ -1,6 +1,6 @@
 import http from './http'
 
-const useMock = import.meta.env.VITE_USE_MOCK !== 'false'
+const useMock = import.meta.env.VITE_USE_MOCK === 'true'
 
 export function useMockData() {
   return useMock

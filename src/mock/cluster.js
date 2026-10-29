@@ -294,6 +294,8 @@ export function getPackEstimate(clusterId, packId) {
       { name: '绝缘电阻偏低', time: '01-15 11:04:55', level: 'warning' },
       { name: '内阻异常增大', time: '01-15 09:37:22', level: 'normal' },
       { name: 'SOC 估算偏差超限', time: '01-14 22:15:48', level: 'normal' }
-    ]
+    ],
+    alarmSummary:
+      '评估 73498 个窗口，实现正确预警（TP）70806 次，在零误报（FP=0）且漏报 2692 次（FN）的情况下，综合预警准确率达 96.3373%。'
   }
 }

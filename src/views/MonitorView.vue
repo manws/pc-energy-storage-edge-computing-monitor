@@ -11,7 +11,6 @@
           <div class="status">
             <span class="dot"></span>
             <span class="online">在线</span>
-            <span id="updated" class="updated">最后更新 14:32:05</span>
           </div>
         </header>
         <div class="header-divider"></div>

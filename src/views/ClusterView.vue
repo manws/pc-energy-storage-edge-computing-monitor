@@ -16,18 +16,18 @@
             </button>
             <h1 class="title">{{ clusterName }}</h1>
           </div>
-          <div class="tb-right">
-            <span class="updated">最后更新 14:32:05</span>
-          </div>
         </header>
         <div class="header-divider"></div>
 
         <main class="content">
           <div class="section-header">
-            <div class="sub">8 个 PACK 运行状态</div>
+            <div class="sub">{{ packSummary }}</div>
           </div>
 
-          <div class="pack-grid">
+          <p v-if="error" class="state">{{ error }}</p>
+          <p v-else-if="loading" class="state">加载中</p>
+          <p v-else-if="!packs.length" class="state">该簇暂无 PACK 数据</p>
+          <div v-else class="pack-grid">
             <article v-for="item in packs" :key="item.id" class="pack-card">
               <span class="watermark" aria-hidden="true">{{ item.id }}</span>
               <div class="card-head">
@@ -83,16 +83,39 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import StageFrame from '@/components/StageFrame.vue'
-import { getPacks } from '@/mock/cluster'
+import { loadPacks } from '@/api/edge'
 
 const route = useRoute()
 const router = useRouter()
 const clusterId = computed(() => String(route.params.id || '1'))
 const clusterName = computed(() => `${clusterId.value}簇`)
-const packs = computed(() => getPacks(clusterId.value))
+const packs = ref([])
+const loading = ref(false)
+const error = ref('')
+const packSummary = computed(() => {
+  if (loading.value || error.value || !packs.value.length) return 'PACK 运行状态'
+  return `${packs.value.length} 个 PACK 运行状态`
+})
+
+watch(
+  clusterId,
+  async (id) => {
+    loading.value = true
+    error.value = ''
+    packs.value = []
+    try {
+      packs.value = await loadPacks(id)
+    } catch (err) {
+      error.value = err.message || '加载失败'
+    } finally {
+      loading.value = false
+    }
+  },
+  { immediate: true }
+)
 
 function packPath(packId) {
   return `/cluster/${clusterId.value}/pack/${packId}`
@@ -112,6 +135,15 @@ function socPercent(value) {
 </script>
 
 <style scoped>
+.state {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
 .page {
   --bg-page: #0f1d38;
   --bg-surface: #18294d;

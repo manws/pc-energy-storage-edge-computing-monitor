@@ -4,7 +4,7 @@
       <!-- 顶栏 -->
       <header class="top-bar">
         <div class="tb-left">
-          <button class="back" type="button" @click="go('/cluster/' + detail.clusterId)">
+          <button class="back" type="button" @click="go('/cluster/' + route.params.clusterId)">
             <svg
               width="16"
               height="16"
@@ -23,8 +23,8 @@
           <h1 class="title">{{ clusterName }} · {{ packName }} · 查看详情</h1>
         </div>
         <div class="tb-right">
-          <span class="status" :class="statusTone">{{ detail.status }}</span>
-          <span class="updated">最后更新 {{ detail.updatedAt }}</span>
+          <span v-if="detail?.status" class="status" :class="statusTone">{{ detail.status }}</span>
+          <span v-if="detail?.updatedAt" class="updated">最后更新 {{ detail.updatedAt }}</span>
         </div>
       </header>
 
@@ -32,144 +32,188 @@
 
       <!-- 内容区 -->
       <main class="content">
-        <!-- 仪表盘行 -->
-        <section class="gauge-row">
-          <article class="gauge-card">
-            <h2 class="gauge-label">总电压</h2>
-            <div class="gauge-visual">
-              <GaugeChart
-                :value="detail.voltage.value"
-                :min="detail.voltage.min"
-                :max="detail.voltage.max"
-                :color="detail.voltage.color"
-              />
-            </div>
-            <div class="val">
-              <span class="num">{{ detail.voltage.value.toFixed(1) }}</span>
-              <span class="unit">{{ detail.voltage.unit }}</span>
-            </div>
-            <p class="range">量程 {{ detail.voltage.min }} – {{ detail.voltage.max }} V</p>
-          </article>
+        <p v-if="error" class="state">{{ error }}</p>
+        <p v-else-if="!detail" class="state">加载中</p>
+        <template v-else>
+          <!-- 仪表盘行 -->
+          <section class="gauge-row">
+            <article class="gauge-card">
+              <h2 class="gauge-label">总电压</h2>
+              <div class="gauge-visual">
+                <GaugeChart
+                  :value="detail.voltage.value"
+                  :min="detail.voltage.min"
+                  :max="detail.voltage.max"
+                  :color="detail.voltage.color"
+                />
+              </div>
+              <div class="val">
+                <span class="num">{{ detail.voltage.value.toFixed(1) }}</span>
+                <span class="unit">{{ detail.voltage.unit }}</span>
+              </div>
+              <p class="range">量程 {{ detail.voltage.min }} – {{ detail.voltage.max }} V</p>
+            </article>
 
-          <article class="gauge-card">
-            <h2 class="gauge-label">总电流</h2>
-            <div class="gauge-visual">
-              <GaugeChart
-                :value="detail.current.value"
-                :min="detail.current.min"
-                :max="detail.current.max"
-                :color="detail.current.color"
-              />
-            </div>
-            <div class="val">
-              <span class="num">{{ detail.current.value.toFixed(1) }}</span>
-              <span class="unit">{{ detail.current.unit }}</span>
-            </div>
-            <p class="range">量程 {{ detail.current.min }} – {{ detail.current.max }} A</p>
-          </article>
+            <article class="gauge-card">
+              <h2 class="gauge-label">总电流</h2>
+              <div class="gauge-visual">
+                <GaugeChart
+                  :value="detail.current.gauge ?? detail.current.value"
+                  :min="detail.current.min"
+                  :max="detail.current.max"
+                  :color="detail.current.color"
+                />
+              </div>
+              <div class="val">
+                <span class="num">{{ detail.current.value.toFixed(1) }}</span>
+                <span class="unit">{{ detail.current.unit }}</span>
+              </div>
+              <p class="range">量程 {{ detail.current.min }} – {{ detail.current.max }} A</p>
+            </article>
 
-          <article class="gauge-card">
-            <h2 class="gauge-label">SOC 荷电状态</h2>
-            <div class="gauge-visual">
-              <GaugeChart
-                :value="detail.soc.value"
-                :min="detail.soc.min"
-                :max="detail.soc.max"
-                :color="detail.soc.color"
-              />
-            </div>
-            <div class="val">
-              <span class="num accent">{{ detail.soc.value.toFixed(1) }}</span>
-              <span class="unit">{{ detail.soc.unit }}</span>
-            </div>
-            <p class="range">额定容量 {{ detail.soc.capacityAh }} Ah</p>
-          </article>
-        </section>
+            <article class="gauge-card">
+              <h2 class="gauge-label">SOC 荷电状态</h2>
+              <div class="gauge-visual">
+                <GaugeChart
+                  :value="detail.soc.value"
+                  :min="detail.soc.min"
+                  :max="detail.soc.max"
+                  :color="detail.soc.color"
+                />
+              </div>
+              <div class="val">
+                <span class="num accent">{{ detail.soc.value.toFixed(1) }}</span>
+                <span class="unit">{{ detail.soc.unit }}</span>
+              </div>
+              <p v-if="detail.soc.capacityAh != null" class="range">
+                额定容量 {{ detail.soc.capacityAh }} Ah
+              </p>
+            </article>
+          </section>
 
-        <!-- 曲线图行 -->
-        <section class="chart-row">
-          <article class="chart-card">
-            <header class="card-head">
-              <h3 class="card-title">单体极值 · 电压曲线</h3>
-              <div class="legend">
-                <span class="lg"><i class="dot orange"></i>最高单体</span>
-                <span class="lg"><i class="dot cyan"></i>最低单体</span>
+          <!-- 曲线图行 -->
+          <section class="chart-row">
+            <article class="chart-card">
+              <header class="card-head">
+                <h3 class="card-title">单体极值 · 电压曲线</h3>
+                <div class="legend">
+                  <span class="lg"><i class="dot orange"></i>最高单体</span>
+                  <span class="lg"><i class="dot cyan"></i>最低单体</span>
+                </div>
+              </header>
+              <div class="chart">
+                <div v-if="!hasVoltageCurve" class="empty">暂无曲线</div>
+                <TrendChart
+                  v-else
+                  :categories="detail.cellVoltage.times"
+                  :series="voltageSeries"
+                  :show-x-axis="detail.cellVoltage.times.length > 0"
+                />
               </div>
-            </header>
-            <div class="chart">
-              <TrendChart :categories="detail.cellVoltage.times" :series="voltageSeries" />
-            </div>
-            <div class="stats">
-              <div class="stat">
-                <span class="stat-label">最高单体 (#{{ detail.cellVoltage.maxIndex }})</span>
-                <span class="stat-value orange">{{ detail.cellVoltage.max.toFixed(3) }} V</span>
+              <div class="stats">
+                <div class="stat">
+                  <span class="stat-label"
+                    >最高单体{{ cellLabel(detail.cellVoltage.maxIndex) }}</span
+                  >
+                  <span class="stat-value orange">{{ detail.cellVoltage.max.toFixed(3) }} V</span>
+                </div>
+                <div class="stat">
+                  <span class="stat-label"
+                    >最低单体{{ cellLabel(detail.cellVoltage.minIndex) }}</span
+                  >
+                  <span class="stat-value cyan">{{ detail.cellVoltage.min.toFixed(3) }} V</span>
+                </div>
               </div>
-              <div class="stat">
-                <span class="stat-label">最低单体 (#{{ detail.cellVoltage.minIndex }})</span>
-                <span class="stat-value cyan">{{ detail.cellVoltage.min.toFixed(3) }} V</span>
-              </div>
-            </div>
-          </article>
+            </article>
 
-          <article class="chart-card">
-            <header class="card-head">
-              <h3 class="card-title">温度极值 · 温度曲线</h3>
-              <div class="legend">
-                <span class="lg"><i class="dot red"></i>最高温度</span>
-                <span class="lg"><i class="dot green"></i>最低温度</span>
+            <article class="chart-card">
+              <header class="card-head">
+                <h3 class="card-title">温度极值 · 温度曲线</h3>
+                <div class="legend">
+                  <span class="lg"><i class="dot red"></i>最高温度</span>
+                  <span class="lg"><i class="dot green"></i>最低温度</span>
+                </div>
+              </header>
+              <div class="chart">
+                <div v-if="!hasTemperatureCurve" class="empty">暂无曲线</div>
+                <TrendChart
+                  v-else
+                  :categories="detail.cellTemperature.times"
+                  :series="temperatureSeries"
+                  :show-x-axis="detail.cellTemperature.times.length > 0"
+                />
               </div>
-            </header>
-            <div class="chart">
-              <TrendChart :categories="detail.cellTemperature.times" :series="temperatureSeries" />
-            </div>
-            <div class="stats">
-              <div class="stat">
-                <span class="stat-label"
-                  >最高温度 (#{{ cellNo(detail.cellTemperature.maxIndex) }})</span
-                >
-                <span class="stat-value red">{{ detail.cellTemperature.max.toFixed(1) }} ℃</span>
+              <div class="stats">
+                <div class="stat">
+                  <span class="stat-label"
+                    >最高温度{{ cellLabel(detail.cellTemperature.maxIndex) }}</span
+                  >
+                  <span class="stat-value red">{{ detail.cellTemperature.max.toFixed(1) }} ℃</span>
+                </div>
+                <div class="stat">
+                  <span class="stat-label"
+                    >最低温度{{ cellLabel(detail.cellTemperature.minIndex) }}</span
+                  >
+                  <span class="stat-value green"
+                    >{{ detail.cellTemperature.min.toFixed(1) }} ℃</span
+                  >
+                </div>
               </div>
-              <div class="stat">
-                <span class="stat-label"
-                  >最低温度 (#{{ cellNo(detail.cellTemperature.minIndex) }})</span
-                >
-                <span class="stat-value green">{{ detail.cellTemperature.min.toFixed(1) }} ℃</span>
-              </div>
-            </div>
-          </article>
-        </section>
+            </article>
+          </section>
+        </template>
       </main>
     </div>
   </StageFrame>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import StageFrame from '@/components/StageFrame.vue'
 import GaugeChart from '@/components/charts/GaugeChart.vue'
 import TrendChart from '@/components/charts/TrendChart.vue'
-import { getPackDetail } from '@/mock/cluster'
+import { loadPackDetail } from '@/api/edge'
 
 const route = useRoute()
 const router = useRouter()
-const detail = computed(() => getPackDetail(route.params.clusterId, route.params.packId))
-const clusterName = computed(() => `${detail.value.clusterId}簇`)
-const packName = computed(() => `PACK${detail.value.packId}`)
+const detail = ref(null)
+const error = ref('')
+const clusterName = computed(() => `${route.params.clusterId}簇`)
+const packName = computed(() => `PACK${route.params.packId}`)
 const statusTone = computed(
-  () => ({ 正常: 'ok', 预警: 'warn', 异常: 'error' })[detail.value.status] || 'ok'
+  () => ({ 正常: 'ok', 预警: 'warn', 异常: 'error' })[detail.value?.status] || 'ok'
 )
 const voltageSeries = computed(() => [
-  { name: '最高单体', color: '#f59e0b', data: detail.value.cellVoltage.maxSeries },
-  { name: '最低单体', color: '#22d3ee', data: detail.value.cellVoltage.minSeries }
+  { name: '最高单体', color: '#f59e0b', data: detail.value?.cellVoltage.maxSeries || [] },
+  { name: '最低单体', color: '#22d3ee', data: detail.value?.cellVoltage.minSeries || [] }
 ])
 const temperatureSeries = computed(() => [
-  { name: '最高温度', color: '#ff5252', data: detail.value.cellTemperature.maxSeries },
-  { name: '最低温度', color: '#4caf50', data: detail.value.cellTemperature.minSeries }
+  { name: '最高温度', color: '#ff5252', data: detail.value?.cellTemperature.maxSeries || [] },
+  { name: '最低温度', color: '#4caf50', data: detail.value?.cellTemperature.minSeries || [] }
 ])
+const hasVoltageCurve = computed(() => voltageSeries.value.some((item) => item.data.length > 0))
+const hasTemperatureCurve = computed(() =>
+  temperatureSeries.value.some((item) => item.data.length > 0)
+)
 
-function cellNo(value) {
-  return String(value).padStart(3, '0')
+watch(
+  () => [route.params.clusterId, route.params.packId],
+  async ([clusterId, packId]) => {
+    detail.value = null
+    error.value = ''
+    try {
+      detail.value = await loadPackDetail(clusterId, packId)
+    } catch (err) {
+      error.value = err.message || '加载失败'
+    }
+  },
+  { immediate: true }
+)
+
+function cellLabel(value) {
+  if (value == null || value === '') return ''
+  return ` (#${String(value).padStart(3, '0')})`
 }
 
 function go(path) {
@@ -180,6 +224,25 @@ function go(path) {
 </script>
 
 <style scoped>
+.state,
+.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.state {
+  flex: 1;
+}
+
+.empty {
+  position: absolute;
+  inset: 0;
+  font-size: 13px;
+}
+
 .page {
   --bg: #0f1d38;
   --surface: #18294d;
