@@ -19,6 +19,12 @@ const FUTURE_CYCLES = [0, 100, 200, 300, 400, 500, 600, 800]
 export const PACK_COUNT = 8
 export const CELL_COUNT = 52
 
+// 装置级标定值（SOE 单位 kWh，SOH 单位 %）
+export const SOE_REAL = 100.74
+export const SOE_PRE = 98.87
+export const SOH_REAL_AVG = 92.1086
+export const SOH_PRE_AVG = 92.0602
+
 const CLUSTERS = {
   1: {
     status: '正常',
@@ -123,12 +129,6 @@ function clampPercent(value) {
   return Number(Math.min(100, Math.max(0, value)).toFixed(1))
 }
 
-function packSoh(clusterId, index, warning) {
-  const rand = random(Number(clusterId || 1) * 419 + (index + 1) * 37)
-  const base = 97.4 - index * 0.22 - (warning ? 2.4 : 0) + (rand() - 0.5) * 0.8
-  return clampPercent(Math.min(99.6, Math.max(90, base)))
-}
-
 function packProfile(clusterId, packId) {
   const cluster = clusterOf(clusterId)
   const index = Math.min(PACK_COUNT, Math.max(1, Number(packId) || 1)) - 1
@@ -158,10 +158,10 @@ function packProfile(clusterId, packId) {
     tempMin: Number(tempMin.toFixed(1)),
     tempMaxNo: 1 + Math.floor(rand() * CELL_COUNT),
     tempMinNo: 1 + Math.floor(rand() * CELL_COUNT),
-    soe: Number((cluster.soe + shift * 0.15).toFixed(1)),
+    soe: SOE_REAL,
     sopDischarge: Number((cluster.sopDischarge + shift * 0.12).toFixed(1)),
     sopCharge: Number((cluster.sopCharge + shift * 0.1).toFixed(1)),
-    soh: packSoh(clusterId, index, warning),
+    soh: SOH_REAL_AVG,
     voltageAbnormal: warning ? 4 : 1 + (index % 3 === 0 ? 1 : 0),
     tempAbnormal: warning ? 3 : index % 4 === 0 ? 1 : 0,
     ocvScore: demo ? 0.32 : Number((0.18 + rand() * 0.28).toFixed(2)),
@@ -173,7 +173,7 @@ function packProfile(clusterId, packId) {
 export function getClusters() {
   return Object.entries(CLUSTERS).map(([id, cluster]) => ({
     id,
-    title: `${id}簇`,
+    title: `#${id}簇`,
     status: cluster.status
   }))
 }
@@ -268,7 +268,7 @@ export function getPackEstimate(clusterId, packId) {
   return {
     clusterId: pack.clusterId,
     packId: pack.packId,
-    soe: { actual: pack.soe, predict: near(predictRand, pack.soe, 0.035, 1) },
+    soe: { actual: SOE_REAL, predict: SOE_PRE },
     sopDischarge: {
       actual: pack.sopDischarge,
       predict: near(predictRand, pack.sopDischarge, 0.04, 1)
@@ -281,16 +281,13 @@ export function getPackEstimate(clusterId, packId) {
       actual: pack.soc,
       predict: clampPercent(near(predictRand, pack.soc, 0.02, 1))
     },
-    soh: {
-      actual: pack.soh,
-      predict: clampPercent(near(predictRand, pack.soh, 0.012, 1))
-    },
+    soh: { actual: SOH_REAL_AVG, predict: SOH_PRE_AVG },
     cells,
     ocv: { ...ocvSeries(pack), score: pack.ocvScore },
     capacity: { ...capacitySeries(pack), mape: pack.mape },
     warnings: [
       { name: `PACK${pack.packId} 单体电压一致性异常`, time: '01-15 14:28:36', level: 'critical' },
-      { name: `${pack.clusterId}簇 温度越限预警`, time: '01-15 13:52:10', level: 'warning' },
+      { name: `#${pack.clusterId}簇 温度越限预警`, time: '01-15 13:52:10', level: 'warning' },
       { name: '绝缘电阻偏低', time: '01-15 11:04:55', level: 'warning' },
       { name: '内阻异常增大', time: '01-15 09:37:22', level: 'normal' },
       { name: 'SOC 估算偏差超限', time: '01-14 22:15:48', level: 'normal' }

@@ -91,7 +91,7 @@ import { loadPacks } from '@/api/edge'
 const route = useRoute()
 const router = useRouter()
 const clusterId = computed(() => String(route.params.id || '1'))
-const clusterName = computed(() => `${clusterId.value}簇`)
+const clusterName = computed(() => `#${clusterId.value}簇`)
 const packs = ref([])
 const loading = ref(false)
 const error = ref('')

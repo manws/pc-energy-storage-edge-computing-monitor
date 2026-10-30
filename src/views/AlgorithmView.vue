@@ -93,17 +93,17 @@
               </div>
             </div>
             <div class="param-card">
-              <div class="param-label">SOH · 健康状态</div>
+              <div class="param-label">SOH · 健康状态（平均）</div>
               <div class="dual">
                 <div class="pair">
-                  <span class="pair-k">真实值</span>
-                  <span class="pair-v num-violet">{{ estimate.soh.actual.toFixed(2) }}</span>
+                  <span class="pair-k">真实平均值</span>
+                  <span class="pair-v num-violet">{{ decimalText(estimate.soh.actual) }}</span>
                   <span class="param-unit">%</span>
                 </div>
                 <span class="pair-split"></span>
                 <div class="pair">
-                  <span class="pair-k">预测值</span>
-                  <span class="pair-v num-violet">{{ estimate.soh.predict.toFixed(2) }}</span>
+                  <span class="pair-k">预估平均值</span>
+                  <span class="pair-v num-violet">{{ decimalText(estimate.soh.predict) }}</span>
                   <span class="param-unit">%</span>
                 </div>
               </div>
@@ -147,7 +147,9 @@
               </header>
               <div class="chart">
                 <div v-if="cellError" class="empty">{{ cellError }}</div>
-                <div v-else-if="!hasOcv" class="empty">{{ cellLoading ? '加载中' : '暂无曲线' }}</div>
+                <div v-else-if="!hasOcv" class="empty">
+                  {{ cellLoading ? '加载中' : '暂无曲线' }}
+                </div>
                 <TrendChart v-else :series="ocvSeries" />
               </div>
             </article>
@@ -261,7 +263,7 @@ const cellCurves = ref(null)
 const cellLoading = ref(false)
 const cellError = ref('')
 let cellRequest = 0
-const clusterName = computed(() => `${route.params.clusterId}簇`)
+const clusterName = computed(() => `#${route.params.clusterId}簇`)
 const packName = computed(() => `PACK${route.params.packId}`)
 const voltageFlags = computed(() =>
   (estimate.value?.cells || []).map((cell) => cell.voltageAbnormal)
@@ -325,6 +327,16 @@ watch(selectedCell, (cellId, previous) => {
 
 function metricText(value) {
   return Number.isFinite(value) ? value.toFixed(2) : '--'
+}
+
+// 最多保留 digits 位小数，去掉尾零：92.1086 -> 92.1086，97.86 -> 97.86，97.8600 -> 97.86
+function decimalText(value, digits = 4) {
+  const num = Number(value)
+  if (!Number.isFinite(num)) return '--'
+  return num
+    .toFixed(digits)
+    .replace(/(\.\d*?)0+$/, '$1')
+    .replace(/\.$/, '')
 }
 
 function go(path) {

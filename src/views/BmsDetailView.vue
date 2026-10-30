@@ -179,7 +179,7 @@ const route = useRoute()
 const router = useRouter()
 const detail = ref(null)
 const error = ref('')
-const clusterName = computed(() => `${route.params.clusterId}簇`)
+const clusterName = computed(() => `#${route.params.clusterId}簇`)
 const packName = computed(() => `PACK${route.params.packId}`)
 const statusTone = computed(
   () => ({ 正常: 'ok', 预警: 'warn', 异常: 'error' })[detail.value?.status] || 'ok'

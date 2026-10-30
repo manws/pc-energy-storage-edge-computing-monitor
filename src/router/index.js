@@ -80,7 +80,7 @@ const router = createRouter({
 
 function clusterName(id) {
   const value = String(id || '1')
-  return /^\d+$/.test(value) ? `${value}簇` : value
+  return /^\d+$/.test(value) ? `#${value}簇` : value
 }
 
 router.afterEach((to) => {
@@ -92,7 +92,9 @@ router.afterEach((to) => {
   if (to.name === 'algorithm') {
     pageTitle = `${clusterName(to.params.clusterId)} · PACK${to.params.packId} · 算法估算`
   }
-  document.title = pageTitle ? `${pageTitle} · 储能-边缘计算监控系统` : '储能-边缘计算监控系统'
+  document.title = pageTitle
+    ? `${pageTitle} · 多状态在线估计算法的边缘端硬件装置`
+    : '多状态在线估计算法的边缘端硬件装置'
 })
 
 export default router

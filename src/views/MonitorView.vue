@@ -6,7 +6,7 @@
         <header class="top-bar">
           <div class="brand">
             <span class="logo"></span>
-            <span class="system-name">储能 · 边缘计算监控系统</span>
+            <span class="system-name">多状态在线估计算法的边缘端硬件装置</span>
           </div>
           <div class="status">
             <span class="dot"></span>
@@ -32,7 +32,7 @@
               type="button"
               @click="go('/cluster/' + item.id)"
             >
-              <span class="watermark" aria-hidden="true">{{ item.id }}</span>
+              <span class="watermark" aria-hidden="true">#{{ item.id }}</span>
               <div class="card-header">
                 <span class="title">{{ item.title }}</span>
               </div>

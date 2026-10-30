@@ -5,7 +5,7 @@
       <header class="topbar">
         <div class="brand">
           <div class="brand-logo"></div>
-          <div class="brand-name">储能 · 边缘计算监控系统</div>
+          <div class="brand-name">多状态在线估计算法的边缘端硬件装置</div>
         </div>
         <nav class="nav-tabs">
           <div class="nav-tab" @click="go('/')">实时监控</div>
